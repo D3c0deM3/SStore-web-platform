@@ -2,23 +2,20 @@ import "../styles/RegistrationPage.css";
 
 const RegistrationPage = () => {
   return (
-    <div className="registration-page">
-      <h1>Register</h1>
-      <form>
-        <div>
-          <label htmlFor="username">Username:</label>
-          <input type="text" id="username" name="username" />
+    <div className="registration-container">
+      <div className="form-card">
+        <div className="tabs">
+          <span className="tab active">LOGIN</span>
+          <div className="divider"></div>
+          <span className="tab">REGISTER</span>
         </div>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input type="email" id="email" name="email" />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input type="password" id="password" name="password" />
-        </div>
-        <button type="submit">Register</button>
-      </form>
+        <form className="form">
+          <input type="tel" placeholder="Phone number" />
+          <input type="password" placeholder="Password" />
+          <button type="submit">LOGIN</button>
+        </form>
+        <div className="forgot-password">Forgot password?</div>
+      </div>
     </div>
   );
 };
