@@ -104,7 +104,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="hero-container">
-          <img src={heroImage} alt="Hero Image" className="hero-image" />
+          <img src={heroImage} alt="Hero" className="hero-image" />
         </div>
       </section>
 
