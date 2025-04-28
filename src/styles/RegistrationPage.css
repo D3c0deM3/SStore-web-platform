@@ -123,3 +123,14 @@
   color: #ffffff;
   text-decoration: underline;
 }
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  text-align: center;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
