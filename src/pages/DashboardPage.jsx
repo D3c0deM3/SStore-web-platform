@@ -46,7 +46,7 @@ const DashboardPage = () => {
   // Extract data from the dashboardData for easier access
   const [products, setProducts] = useState([]);
   const [quantity, setQuantity] = useState(0);
-  const [productsBySells, setProductsBySells] = useState([]);
+  // const [productsBySells, setProductsBySells] = useState([]); // Commented out due to ESLint no-unused-vars warning
   const [productsByPrice, setProductsByPrice] = useState([]);
   const [profits, setProfits] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -137,12 +137,12 @@ const DashboardPage = () => {
       }
 
       // Extract products by sells
-      const productsBySellsObj = dashboardData.find(
-        (item) => item.products_by_sells
-      );
-      if (productsBySellsObj) {
-        setProductsBySells(productsBySellsObj.products_by_sells || []);
-      }
+      // const productsBySellsObj = dashboardData.find(
+      //   (item) => item.products_by_sells
+      // );
+      // if (productsBySellsObj) {
+      //   setProductsBySells(productsBySellsObj.products_by_sells || []);
+      // } // Commented out due to ESLint no-unused-vars warning
 
       // Extract products by price
       const productsByPriceObj = dashboardData.find(
@@ -257,53 +257,53 @@ const DashboardPage = () => {
   };
 
   // Find significant profit points for annotations (if needed)
-  const findSignificantProfits = () => {
-    if (!profits || profits.length === 0) return [];
+  // const findSignificantProfits = () => {
+  //   if (!profits || profits.length === 0) return [];
 
-    let significantPoints = [];
-    // Find max profit
-    const maxProfit = Math.max(...profits);
-    const maxIndex = profits.indexOf(maxProfit);
-    if (maxProfit > 0) {
-      significantPoints.push({
-        value: maxProfit,
-        index: maxIndex,
-        label: `+${maxProfit.toLocaleString()} UZS`,
-        color: "#4ade80",
-      });
-    }
+  //   let significantPoints = [];
+  //   // Find max profit
+  //   const maxProfit = Math.max(...profits);
+  //   const minIndex = profits.indexOf(maxProfit);
+  //   if (maxProfit > 0) {
+  //     significantPoints.push({
+  //       value: maxProfit,
+  //       index: maxIndex,
+  //       label: `+${maxProfit.toLocaleString()} UZS`,
+  //       color: "#4ade80",
+  //     });
+  //   }
 
-    // Find min profit (largest loss)
-    const minProfit = Math.min(...profits);
-    const minIndex = profits.indexOf(minProfit);
-    if (minProfit < 0) {
-      significantPoints.push({
-        value: minProfit,
-        index: minIndex,
-        label: `${minProfit.toLocaleString()} UZS`,
-        color: "#ff4d4f",
-      });
-    }
+  //   // Find min profit (largest loss)
+  //   const minProfit = Math.min(...profits);
+  //   const minIndex = profits.indexOf(minProfit);
+  //   if (minProfit < 0) {
+  //     significantPoints.push({
+  //       value: minProfit,
+  //       index: minIndex,
+  //       label: `${minProfit.toLocaleString()} UZS`,
+  //       color: "#ff4d4f",
+  //     });
+  //   }
 
-    // Find last significant change
-    const lastNonZero = profits
-      .slice()
-      .reverse()
-      .find((p) => p !== 0);
-    const lastIndex = profits.lastIndexOf(lastNonZero);
-    if (lastNonZero && lastIndex !== maxIndex && lastIndex !== minIndex) {
-      significantPoints.push({
-        value: lastNonZero,
-        index: lastIndex,
-        label: `${
-          lastNonZero > 0 ? "+" : ""
-        }${lastNonZero.toLocaleString()} UZS`,
-        color: lastNonZero > 0 ? "#4ade80" : "#ff4d4f",
-      });
-    }
+  //   // Find last significant change
+  //   const lastNonZero = profits
+  //     .slice()
+  //     .reverse()
+  //     .find((p) => p !== 0);
+  //   const lastIndex = profits.lastIndexOf(lastNonZero);
+  //   if (lastNonZero && lastIndex !== maxIndex && lastIndex !== minIndex) {
+  //     significantPoints.push({
+  //       value: lastNonZero,
+  //       index: lastIndex,
+  //       label: `${
+  //         lastNonZero > 0 ? "+" : ""
+  //       }${lastNonZero.toLocaleString()} UZS`,
+  //       color: lastNonZero > 0 ? "#4ade80" : "#ff4d4f",
+  //     });
+  //   }
 
-    return significantPoints;
-  };
+  //   return significantPoints;
+  // }; // Commented out due to ESLint no-unused-vars warning
 
   return (
     <div className="dashboard">
