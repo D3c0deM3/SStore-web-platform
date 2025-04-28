@@ -45,6 +45,7 @@ const RegistrationPage = () => {
           password: password,
         });
         console.log("Login Success:", response.data);
+        window.location.href = "/dashboard";
       } else {
         response = await axios.post(`${apiBaseUrl}/api/signup/`, {
           phone_number: phoneNumber,
@@ -52,14 +53,13 @@ const RegistrationPage = () => {
           password: password,
         });
         console.log("Register Success:", response.data);
+        window.location.href = "/plan";
       }
 
       // ✅ Save token and market info to localStorage for both login and register
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("market", JSON.stringify(response.data.market));
-
       // ✅ Redirect to dashboard or home page
-      window.location.href = "/plan";
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
       const serverMessage =

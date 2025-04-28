@@ -42,11 +42,46 @@ const plans = [
 const PlanPage = () => {
   const navigate = useNavigate();
 
-  const handlePlanSelect = (selectedPlan) => {
+  const handlePlanSelect = async (selectedPlan) => {
     const market = JSON.parse(localStorage.getItem("market"));
     market.plan = selectedPlan;
     localStorage.setItem("market", JSON.stringify(market));
-    navigate("/dashboard");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/");
+      return;
+    }
+
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/dashboard`, {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${token}`, // <-- fixed here
+          "Content-Type": "application/json",
+        },
+      });
+
+      const rawText = await response.text();
+      console.log("RAW RESPONSE TEXT:", rawText);
+
+      if (rawText.trim()) {
+        try {
+          const data = JSON.parse(rawText);
+          console.log("Parsed JSON:", data);
+
+          navigate("/dashboard", { state: { dashboardData: data } });
+        } catch (parseError) {
+          console.error("Failed to parse JSON:", parseError);
+        }
+      } else {
+        console.log("Response was empty.");
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
   };
 
   useEffect(() => {
