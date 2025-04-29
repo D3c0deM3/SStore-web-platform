@@ -21,6 +21,7 @@ import calculatorIcon from "../assets/dashboard/calculator.svg";
 import aiIcon from "../assets/dashboard/ai-icon.svg";
 import searchIcon from "../assets/dashboard/search.svg";
 import profileIcon from "../assets/dashboard/profile.png";
+import VIP from "../assets/dashboard/vip.svg";
 
 ChartJS.register(
   LineElement,
@@ -111,6 +112,7 @@ const DashboardPage = () => {
         setUser({
           name: marketData.market_name || "Unknown Market",
           phone: marketData.phone_number || "No phone number",
+          plan: marketData.plan || "Unknown plan",
           profileImage: marketData.profile_picture
             ? `${apiBaseUrl}${marketData.profile_picture}`
             : null,
@@ -119,6 +121,7 @@ const DashboardPage = () => {
         setUser({
           name: "Unknown Market",
           phone: "No phone number",
+          plan: "Unknown plan",
           profileImage: null,
         });
       }
@@ -257,6 +260,7 @@ const DashboardPage = () => {
     },
   };
 
+  const plan_icon = `../assets/dashboard/${user?.plan}.svg`;
   // Find significant profit points for annotations (if needed)
   // const findSignificantProfits = () => {
   //   if (!profits || profits.length === 0) return [];
@@ -334,7 +338,10 @@ const DashboardPage = () => {
             </li>
           </ul>
         </nav>
-        <div className="vip-plan">VIP PLAN</div>
+        <div className="vip-plan">
+          <img src={plan_icon} alt="" />
+          {user?.plan} PLAN
+        </div>
       </aside>
 
       <main className="main-content">
