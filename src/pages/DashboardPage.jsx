@@ -51,23 +51,8 @@ const DashboardPage = () => {
   const [profits, setProfits] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
-  useEffect(() => {
-    const marketData = localStorage.getItem("market");
-    if (marketData) {
-      const parsedData = JSON.parse(marketData);
-      setUser({
-        name: parsedData.name || "John DOE",
-        phone: parsedData.phone || "+99897201317",
-        profileImage: parsedData.profileImage || null,
-      });
-    } else {
-      setUser({
-        name: "John DOE",
-        phone: "+99897201317",
-        profileImage: null,
-      });
-    }
-  }, []);
+  const apiBaseUrl =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -76,9 +61,6 @@ const DashboardPage = () => {
         navigate("/login");
         return;
       }
-
-      const apiBaseUrl =
-        process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/dashboard`, {
@@ -117,11 +99,30 @@ const DashboardPage = () => {
     if (!dashboardData) {
       fetchDashboardData();
     }
-  }, [dashboardData, navigate]);
+  }, [dashboardData, navigate, apiBaseUrl]);
 
   // Process dashboard data when it's available
   useEffect(() => {
     if (dashboardData && Array.isArray(dashboardData)) {
+      // Extract market data for user info
+      const marketDataObj = dashboardData.find((item) => item.market_data);
+      if (marketDataObj && marketDataObj.market_data) {
+        const marketData = marketDataObj.market_data;
+        setUser({
+          name: marketData.market_name || "Unknown Market",
+          phone: marketData.phone_number || "No phone number",
+          profileImage: marketData.profile_picture
+            ? `${apiBaseUrl}${marketData.profile_picture}`
+            : null,
+        });
+      } else {
+        setUser({
+          name: "Unknown Market",
+          phone: "No phone number",
+          profileImage: null,
+        });
+      }
+
       // Extract products
       const productsObj = dashboardData.find((item) => item.products);
       if (productsObj) {
@@ -165,7 +166,7 @@ const DashboardPage = () => {
         setProfits(profitsObj.profit || []);
       }
     }
-  }, [dashboardData]);
+  }, [dashboardData, apiBaseUrl]);
 
   // Prepare chart data when profits are available
   useEffect(() => {
