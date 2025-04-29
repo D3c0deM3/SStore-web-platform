@@ -21,7 +21,10 @@ import calculatorIcon from "../assets/dashboard/calculator.svg";
 import aiIcon from "../assets/dashboard/ai-icon.svg";
 import searchIcon from "../assets/dashboard/search.svg";
 import profileIcon from "../assets/dashboard/profile.png";
-// import VIP from "../assets/dashboard/vip.svg";
+
+import basicPlanIcon from "../assets/dashboard/basic.svg";
+import proPlanIcon from "../assets/dashboard/pro.svg";
+import vipPlanIcon from "../assets/dashboard/vip.svg";
 
 ChartJS.register(
   LineElement,
@@ -174,8 +177,28 @@ const DashboardPage = () => {
   // Prepare chart data when profits are available
   useEffect(() => {
     if (profits.length > 0) {
-      // Create labels based on the number of profit entries
-      const labels = profits.map((_, index) => `${index + 1}-sentyabr`);
+      // Calculate how many points we need to distribute evenly across September's 30 days
+      const totalDays = 30; // September has 30 days
+      const dataPoints = profits.length;
+
+      // Create evenly spaced labels for September
+      const labels = [];
+
+      if (dataPoints === 1) {
+        // If there's only one data point, just show mid-month
+        labels.push("15-sentyabr");
+      } else {
+        // Calculate step size to evenly distribute points
+        const step = dataPoints > 1 ? (totalDays - 1) / (dataPoints - 1) : 0;
+
+        // Generate labels for evenly spaced days
+        for (let i = 0; i < dataPoints; i++) {
+          const day = Math.round(1 + i * step);
+          // Ensure day is within valid range (1-30)
+          const validDay = Math.max(1, Math.min(30, day));
+          labels.push(`${validDay}-sentyabr`);
+        }
+      }
 
       setChartData({
         labels: labels,
@@ -193,6 +216,23 @@ const DashboardPage = () => {
       });
     }
   }, [profits]);
+
+  const getPlanIcon = (planType) => {
+    if (!planType) return null;
+
+    const planTypeLower = planType.toLowerCase();
+
+    if (planTypeLower.includes("basic")) {
+      return basicPlanIcon;
+    } else if (planTypeLower.includes("pro")) {
+      return proPlanIcon;
+    } else if (planTypeLower.includes("vip")) {
+      return vipPlanIcon;
+    }
+
+    // Default to basic if unknown
+    return basicPlanIcon;
+  };
 
   if (loading) {
     return <div className="loading">Loading dashboard...</div>;
@@ -260,179 +300,167 @@ const DashboardPage = () => {
     },
   };
 
-  const plan_icon = `../assets/dashboard/${user?.plan}.svg`;
-  // Find significant profit points for annotations (if needed)
-  // const findSignificantProfits = () => {
-  //   if (!profits || profits.length === 0) return [];
-
-  //   let significantPoints = [];
-  //   // Find max profit
-  //   const maxProfit = Math.max(...profits);
-  //   const minIndex = profits.indexOf(maxProfit);
-  //   if (maxProfit > 0) {
-  //     significantPoints.push({
-  //       value: maxProfit,
-  //       index: maxIndex,
-  //       label: `+${maxProfit.toLocaleString()} UZS`,
-  //       color: "#4ade80",
-  //     });
-  //   }
-
-  //   // Find min profit (largest loss)
-  //   const minProfit = Math.min(...profits);
-  //   const minIndex = profits.indexOf(minProfit);
-  //   if (minProfit < 0) {
-  //     significantPoints.push({
-  //       value: minProfit,
-  //       index: minIndex,
-  //       label: `${minProfit.toLocaleString()} UZS`,
-  //       color: "#ff4d4f",
-  //     });
-  //   }
-
-  //   // Find last significant change
-  //   const lastNonZero = profits
-  //     .slice()
-  //     .reverse()
-  //     .find((p) => p !== 0);
-  //   const lastIndex = profits.lastIndexOf(lastNonZero);
-  //   if (lastNonZero && lastIndex !== maxIndex && lastIndex !== minIndex) {
-  //     significantPoints.push({
-  //       value: lastNonZero,
-  //       index: lastIndex,
-  //       label: `${
-  //         lastNonZero > 0 ? "+" : ""
-  //       }${lastNonZero.toLocaleString()} UZS`,
-  //       color: lastNonZero > 0 ? "#4ade80" : "#ff4d4f",
-  //     });
-  //   }
-
-  //   return significantPoints;
-  // }; // Commented out due to ESLint no-unused-vars warning
-
   return (
     <div className="dashboard">
+      {/* Left Sidebar with Menu */}
       <aside className="sidebar">
         <img src={logo} alt="SStore Logo" className="logo" />
+        <span className="logo_underline"></span>
         <nav className="menu">
+          <p className="sidebar-menu">Menu</p>
           <ul>
-            <li>
+            <li
+              className={location.pathname === "/dashboard" ? "active" : ""}
+              onClick={() => navigate("/dashboard")}
+            >
               <img src={homeIcon} alt="Home" />
               Asosiy sahifa
             </li>
-            <li>
+            <li
+              className={location.pathname === "/hisobotlar" ? "active" : ""}
+              onClick={() => navigate("/hisobotlar")}
+            >
               <img src={historyIcon} alt="History" />
               Hisobotlar
             </li>
-            <li>
+            <li
+              className={location.pathname === "/mahsulotlar" ? "active" : ""}
+              onClick={() => navigate("/mahsulotlar")}
+            >
               <img src={productsIcon} alt="Products" />
               Mahsulotlar
             </li>
-            <li>
+            <li
+              className={location.pathname === "/kalkulyator" ? "active" : ""}
+              onClick={() => navigate("/kalkulyator")}
+            >
               <img src={calculatorIcon} alt="Calculator" />
               Kalkulyator
             </li>
-            <li>
+            <li
+              className={location.pathname === "/ai-maslahat" ? "active" : ""}
+              onClick={() => navigate("/ai-maslahat")}
+            >
               <img src={aiIcon} alt="AI" />
               AI maslahat
             </li>
           </ul>
         </nav>
         <div className="vip-plan">
-          <img src={plan_icon} alt="" />
+          {user?.plan && (
+            <img
+              src={getPlanIcon(user.plan)}
+              alt={`${user.plan} Icon`}
+              className="plan-icon"
+            />
+          )}
           {user?.plan} PLAN
         </div>
       </aside>
 
-      <main className="main-content">
-        <header className="top-bar">
+      {/* Content wrapper for all three sections */}
+      <div className="content-wrapper">
+        {/* Main Column for Search, Stats, Chart and Top Selling - Now in the center */}
+        <main className="main-content">
+          {/* Search Bar */}
           <div className="search-container">
             <img src={searchIcon} alt="Search" />
             <input type="text" placeholder="Qidiruv..." />
           </div>
-          <div className="profile-container">
-            <div>
-              <span>{user?.name}</span>
-              <span>{user?.phone}</span>
+
+          {/* Stats Cards */}
+          <section className="stats-cards">
+            <div className="card">
+              <h3>Mahsulotlar</h3>
+              <p>{quantity}</p>
             </div>
-            {user?.profileImage ? (
-              <img
-                src={user.profileImage}
-                alt="Profile"
-                className="profile-pic"
-              />
-            ) : (
-              <img
-                src={profileIcon}
-                alt="Profile Icon"
-                className="profile-pic"
-              />
-            )}
-          </div>
-        </header>
+            <div className="card">
+              <h3>Joriy daromad</h3>
+              <p>{totalRevenue.toLocaleString()} UZS</p>
+            </div>
+          </section>
 
-        <section className="stats-cards">
-          <div className="card">
-            <h3>Mahsulotlar</h3>
-            <p>{quantity}</p>
-          </div>
-          <div className="card">
-            <h3>Joriy daromad</h3>
-            <p>{totalRevenue.toLocaleString()} UZS</p>
-          </div>
-        </section>
+          {/* Chart Section */}
+          <section className="chart-section">
+            <h3>Oylik Sof Foyda</h3>
+            <div className="chart-wrapper">
+              {chartData ? (
+                <Line data={chartData} options={chartOptions} />
+              ) : (
+                <p>Loading chart...</p>
+              )}
+            </div>
+          </section>
 
-        <section className="chart-section">
-          <h3>Oylik Sof Foyda</h3>
-          <div className="chart-wrapper">
-            {chartData ? (
-              <Line data={chartData} options={chartOptions} />
-            ) : (
-              <p>Loading chart...</p>
-            )}
-          </div>
-        </section>
-
-        <section className="products-section">
-          <div className="table-container">
-            <h3>Top Selling products</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Sales</th>
-                  <th>Amount</th>
-                  <th>Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productsByPrice.length > 0 ? (
-                  productsByPrice.map((product) => (
-                    <tr key={product.id}>
-                      <td>{product.name}</td>
-                      <td>
-                        {(product.total_subtracted || 0).toLocaleString()}{" "}
-                        {product.quantity_type}
-                      </td>
-                      <td>
-                        {product.quantity.toLocaleString()}{" "}
-                        {product.quantity_type}
-                      </td>
-                      <td>{product.total_sold_price.toLocaleString()} UZS</td>
-                    </tr>
-                  ))
-                ) : (
+          {/* Top Selling Products */}
+          <section className="top-selling-section">
+            <div className="table-container">
+              <h3>Top Selling products</h3>
+              <table>
+                <thead>
                   <tr>
-                    <td colSpan="4" className="text-center">
-                      No sales data available.
-                    </td>
+                    <th>Product</th>
+                    <th>Sales</th>
+                    <th>Amount</th>
+                    <th>Price</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {productsByPrice.length > 0 ? (
+                    productsByPrice.map((product) => (
+                      <tr key={product.id}>
+                        <td>{product.name}</td>
+                        <td>
+                          {(product.total_subtracted || 0).toLocaleString()}{" "}
+                          {product.quantity_type}
+                        </td>
+                        <td>
+                          {product.quantity.toLocaleString()}{" "}
+                          {product.quantity_type}
+                        </td>
+                        <td>{product.total_sold_price.toLocaleString()} UZS</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center">
+                        No sales data available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+
+        {/* Right Column for Profile and Barcha Mahsulotlar */}
+        <div className="right-column">
+          {/* Profile Info */}
+          <div className="profile-section">
+            <div className="profile-container">
+              <div>
+                <span>{user?.name}</span>
+                <span>{user?.phone}</span>
+              </div>
+              {user?.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt="Profile"
+                  className="profile-pic"
+                />
+              ) : (
+                <img
+                  src={profileIcon}
+                  alt="Profile Icon"
+                  className="profile-pic"
+                />
+              )}
+            </div>
           </div>
 
-          <div className="table-container">
+          {/* Barcha Mahsulotlar Table */}
+          <div className="table-container products-table">
             <h3>Barcha Mahsulotlar</h3>
             <table>
               <thead>
@@ -459,8 +487,8 @@ const DashboardPage = () => {
               </tbody>
             </table>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 };
