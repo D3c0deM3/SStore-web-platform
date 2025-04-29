@@ -21,7 +21,7 @@ import calculatorIcon from "../assets/dashboard/calculator.svg";
 import aiIcon from "../assets/dashboard/ai-icon.svg";
 import searchIcon from "../assets/dashboard/search.svg";
 import profileIcon from "../assets/dashboard/profile.png";
-import VIP from "../assets/dashboard/vip.svg";
+// import VIP from "../assets/dashboard/vip.svg";
 
 ChartJS.register(
   LineElement,
