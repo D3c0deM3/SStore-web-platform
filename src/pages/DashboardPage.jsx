@@ -117,7 +117,7 @@ const DashboardPage = () => {
           phone: marketData.phone_number || "No phone number",
           plan: marketData.plan || "Unknown plan",
           profileImage: marketData.profile_picture
-            ? `${apiBaseUrl}${marketData.profile_picture}`
+            ? `${marketData.profile_picture}`
             : null,
         });
       } else {
@@ -174,6 +174,7 @@ const DashboardPage = () => {
     }
   }, [dashboardData, apiBaseUrl]);
 
+  console.log(user);
   // Prepare chart data when profits are available
   useEffect(() => {
     if (profits.length > 0) {
@@ -216,7 +217,6 @@ const DashboardPage = () => {
       });
     }
   }, [profits]);
-
   const getPlanIcon = (planType) => {
     if (!planType) return null;
 
@@ -445,7 +445,7 @@ const DashboardPage = () => {
               </div>
               {user?.profileImage ? (
                 <img
-                  src={user.profileImage}
+                  src={`https://res.cloudinary.com/bnf404/${user.profileImage}`}
                   alt="Profile"
                   className="profile-pic"
                 />

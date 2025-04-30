@@ -34,9 +34,8 @@ body {
 }
 
 .profile-section {
-  background-color: #2e313a;
   padding: 15px;
-  border-radius: 10px;
+  /* border-radius: 10px; */
   margin-bottom: 20px;
 }
 
