@@ -25,6 +25,7 @@ import profileIcon from "../assets/dashboard/profile.png";
 import basicPlanIcon from "../assets/dashboard/basic.svg";
 import proPlanIcon from "../assets/dashboard/pro.svg";
 import vipPlanIcon from "../assets/dashboard/vip.svg";
+import profileArrowIcon from "../assets/dashboard/down_arrow.svg";
 
 ChartJS.register(
   LineElement,
@@ -439,10 +440,6 @@ const DashboardPage = () => {
           {/* Profile Info */}
           <div className="profile-section">
             <div className="profile-container">
-              <div>
-                <span>{user?.name}</span>
-                <span>{user?.phone}</span>
-              </div>
               {user?.profileImage ? (
                 <img
                   src={`https://res.cloudinary.com/bnf404/${user.profileImage}`}
@@ -456,6 +453,15 @@ const DashboardPage = () => {
                   className="profile-pic"
                 />
               )}
+              <div>
+                <span>{user?.name}</span>
+                <span>{user?.phone}</span>
+              </div>
+              <img
+                src={profileArrowIcon}
+                alt="arr"
+                className="profile_arrow_icon"
+              />
             </div>
           </div>
 

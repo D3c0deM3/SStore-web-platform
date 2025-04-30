@@ -35,7 +35,9 @@ body {
 
 .profile-section {
   padding: 15px;
-  /* border-radius: 10px; */
+  border-radius: 10px;
+  border: 2px rgba(255, 255, 255, 0.347) solid;
+  /* box-shadow: 6px 6px 6px 4px rgba(0, 0, 0, 0.536); */
   margin-bottom: 20px;
 }
 
@@ -63,9 +65,9 @@ body {
 }
 .logo_underline {
   display: block;
-  width: 80%; /* Width of the line relative to logo container */
-  height: 2px; /* Thickness of the line */
-  background-color: rgba(255, 255, 255, 0.2); /* Color and opacity */
+  width: 90%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.2);
   margin-bottom: 25px;
 }
 .menu ul {
@@ -117,7 +119,7 @@ body {
   padding: 0.7rem 1rem;
   /* margin-left: -1rem; */
   border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Hover state (optional) */
@@ -134,8 +136,8 @@ body {
   flex: 1;
   padding: 20px 30px;
   overflow-y: auto;
-  min-width: 0; /* Ensure flex child can shrink below content size */
-  scrollbar-width: none; /* Firefox */
+  min-width: 0;
+  scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
@@ -152,6 +154,7 @@ body {
   padding: 8px 16px;
   width: 100%;
   margin-bottom: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .search-container img {
@@ -176,11 +179,10 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
-  justify-content: space-between;
 }
 
 .profile-container span {
-  text-align: right;
+  text-align: left;
   display: block;
   font-size: 14px;
 }
@@ -188,6 +190,12 @@ body {
 .profile-container span:last-of-type {
   color: #a0aec0;
   font-size: 12px;
+}
+
+.profile_arrow_icon {
+  height: 24px;
+  width: 24px;
+  margin-left: 20px;
 }
 
 .profile-pic {
@@ -209,6 +217,7 @@ body {
   padding: 20px;
   border-radius: 10px;
   flex: 1;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .card h3 {
@@ -230,6 +239,7 @@ body {
   border-radius: 10px;
   margin-bottom: 25px;
   position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .chart-section h3 {
@@ -266,6 +276,7 @@ body {
   padding: 20px;
   border-radius: 10px;
   position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .products-table {
