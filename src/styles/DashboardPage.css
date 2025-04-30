@@ -1,5 +1,7 @@
 /* Theme variables */
 :root {
+  --color-logo: #ffffff;
+
   /* Base colors */
   --color-bg-primary: #041421;
   --color-bg-secondary: #2e313a;
@@ -27,33 +29,33 @@
   --color-menu-text: #aca7a7;
 }
 
-/* Light theme (commented out, to be implemented later) */
-/*
-  .light-theme {
-    --color-bg-primary: #f8f9fa;
-    --color-bg-secondary: #e9ecef;
-    --color-text-primary: #212529;
-    --color-text-secondary: #495057;
-    --color-text-muted: rgba(33, 37, 41, 0.5);
-    --color-border: rgba(33, 37, 41, 0.1);
-    --color-border-highlight: rgba(33, 37, 41, 0.347);
-    
-    --color-success: #28a745;
-    --color-success-bg: rgba(40, 167, 69, 0.1);
-    --color-danger: #dc3545;
-    
-    --color-table-row-odd: #e2e8f0;
-    --color-table-row-even: #f8f9fa;
-    
-    --color-shadow: rgba(0, 0, 0, 0.2);
-    --color-active: #e2e8f0;
-    --color-hover: #cbd5e0;
-    
-    --color-menu-text: #6c757d;
-  }
-  */
+/* Light theme overrides */
+.light-theme {
+  --color-bg-primary: #f6f6f6;
+  --color-bg-secondary: #ffffff;
+  --color-text-primary: #041421;
+  --color-text-secondary: #495057;
+  --color-text-muted: rgba(4, 20, 33, 0.5);
+  --color-border: rgba(4, 20, 33, 0.1);
+  --color-border-highlight: rgba(4, 20, 33, 0.347);
+  --color-logo: #041421;
 
-/* Reset default margins */
+  /* Keep action colors or adjust as needed */
+  --color-success: #4ade80;
+  --color-success-bg: rgba(74, 222, 128, 0.1);
+  --color-danger: #ff4d4f;
+
+  /* Zebra rows for light theme */
+  --color-table-row-odd: #f6f6f6;
+  --color-table-row-even: #ffffff;
+
+  /* Sidebar active */
+  --color-active: #4c7273;
+  --color-hover: #cbd5e0;
+  --color-menu-text: #6c757d;
+}
+
+/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -72,28 +74,19 @@ body {
   background-color: var(--color-bg-primary);
 }
 
-/* Content wrapper to hold main content and right column */
-.content-wrapper {
-  display: flex;
-  flex: 1;
+/* LOGO */
+.logo {
+  height: 40px;
+  fill: var(--color-logo);
+  margin-bottom: 25px;
 }
 
-/* Right Column for Profile and Barcha Mahsulotlar */
-.right-column {
-  width: 280px;
-  padding: 20px;
-  background-color: var(--color-bg-primary);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.profile-section {
-  padding: 15px;
-  border-radius: 10px;
-  border: 2px var(--color-border-highlight) solid;
-  /* box-shadow: 6px 6px 6px 4px rgba(0, 0, 0, 0.536); */
-  margin-bottom: 20px;
+.logo_underline {
+  display: block;
+  width: 90%;
+  height: 2px;
+  background-color: var(--color-border);
+  margin-bottom: 25px;
 }
 
 /* Sidebar */
@@ -104,7 +97,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* border-right: 1px solid var(--color-border); */
 }
 
 .sidebar-menu {
@@ -113,18 +105,6 @@ body {
   padding-bottom: 20px;
 }
 
-.logo {
-  height: 40px;
-  margin-bottom: 25px;
-  position: relative;
-}
-.logo_underline {
-  display: block;
-  width: 90%;
-  height: 2px;
-  background-color: var(--color-border);
-  margin-bottom: 25px;
-}
 .menu ul {
   list-style: none;
 }
@@ -146,6 +126,23 @@ body {
   height: 20px;
 }
 
+.menu li.active {
+  background-color: var(--color-active);
+  color: var(--color-text-primary);
+  font-weight: bold;
+  padding: 0.7rem 1rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px var(--color-shadow);
+}
+
+.menu li:hover {
+  background-color: var(--color-hover);
+  border-radius: 15px;
+  padding: 0.7rem 1rem;
+  color: var(--color-text-primary);
+}
+
+/* VIP Plan */
 .vip-plan {
   background-color: var(--color-bg-primary);
   border: 2px solid var(--color-text-primary);
@@ -159,6 +156,7 @@ body {
   color: var(--color-text-primary);
   min-width: 10rem;
 }
+
 .plan-icon {
   margin-right: 8px;
   width: 20px;
@@ -166,27 +164,13 @@ body {
   vertical-align: middle;
 }
 
-/* Active state */
-.menu li.active {
-  background-color: var(--color-active);
-  color: var(--color-text-primary);
-  font-weight: bold;
-  padding: 0.7rem 1rem;
-  /* margin-left: -1rem; */
-  border-radius: 15px;
-  box-shadow: 0 4px 6px var(--color-shadow);
+/* Content wrapper */
+.content-wrapper {
+  display: flex;
+  flex: 1;
 }
 
-/* Hover state (optional) */
-.menu li:hover {
-  background-color: var(--color-hover);
-  border-radius: 15px;
-  padding: 0.7rem 1rem;
-  /* margin-left: -1rem; */
-  color: var(--color-text-primary);
-}
-
-/* Main Content */
+/* Main content */
 .main-content {
   flex: 1;
   padding: 20px 30px;
@@ -200,7 +184,7 @@ body {
   display: none;
 }
 
-/* Search Bar */
+/* Search */
 .search-container {
   display: flex;
   align-items: center;
@@ -230,6 +214,15 @@ body {
   color: var(--color-text-muted);
 }
 
+/* Profile dropdown container must be relative */
+.profile-section {
+  padding: 15px;
+  border-radius: 10px;
+  border: 2px var(--color-border-highlight) solid;
+  margin-bottom: 20px;
+  position: relative;
+}
+
 .profile-container {
   display: flex;
   align-items: center;
@@ -237,7 +230,6 @@ body {
 }
 
 .profile-container span {
-  text-align: left;
   display: block;
   font-size: 14px;
 }
@@ -247,17 +239,109 @@ body {
   font-size: 12px;
 }
 
-.profile_arrow_icon {
-  height: 24px;
-  width: 24px;
-  margin-left: 20px;
-}
-
 .profile-pic {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.profile_arrow_icon {
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+}
+
+/* PROFILE DROPDOWN */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px var(--color-shadow);
+  width: 200px;
+  z-index: 100;
+}
+
+.profile-dropdown button {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 10px 20px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.profile-dropdown button:hover {
+  background-color: var(--color-hover);
+}
+
+/* THEME TOGGLE SWITCH */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-border);
+  border-radius: 34px;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--color-success);
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.right-column {
+  width: 280px;
+  padding: 20px;
+  background-color: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* Stats Cards */
@@ -300,9 +384,6 @@ body {
 .chart-section h3 {
   font-size: 16px;
   margin-bottom: 15px;
-  /* display: flex;
-  justify-content: space-between;
-  align-items: center; */
 }
 
 .graph-head-content {
@@ -411,7 +492,35 @@ table td {
   stroke: var(--color-success);
 }
 
-/* Loading and Error States */
+/* PRODUCTS TABLE UNDER PROFILE SECTION */
+.right-column .table-container.products-table table thead tr {
+  background-color: var(--color-active);
+}
+
+.right-column .table-container.products-table table thead th {
+  color: var(--color-text-primary);
+}
+
+/* Zebra striping */
+.products-table tbody tr:nth-child(odd) {
+  background-color: var(--color-table-row-odd);
+}
+
+.products-table tbody tr:nth-child(even) {
+  background-color: var(--color-table-row-even);
+}
+
+/* Remove rounded corners from table rows to match the design */
+table tr {
+  border-radius: 0;
+}
+
+/* Ensure the text in table cells is properly visible against colored backgrounds */
+table td {
+  color: var(--color-text-primary);
+}
+
+/* Loading, errors */
 .loading,
 .error,
 .no-data {
@@ -423,7 +532,7 @@ table td {
   font-size: 18px;
 }
 
-/* Mobile Responsiveness */
+/* Responsive breakpoints */
 @media (max-width: 1200px) {
   .content-wrapper {
     flex-direction: column;
@@ -458,7 +567,7 @@ table td {
   }
 }
 
-/* ===== Responsive v3: table beside Top Selling ===== */
+/* Responsive v3: table beside Top Selling */
 @media (min-width: 768px) and (max-width: 1200px) {
   .content-wrapper {
     display: flex;
@@ -491,6 +600,7 @@ table td {
     flex-direction: column;
     margin-top: 550px; /* ← adjust this until it lines up under Top-Selling */
   }
+
   .right-column > :not(.products-table) {
     display: none !important;
   }
@@ -504,52 +614,37 @@ table td {
   }
 }
 
-/* keep your small-screen rules as before */
+/* Small screens */
 @media (max-width: 767px) {
   .sidebar {
     display: none;
   }
+
   .content-wrapper {
     flex-direction: column;
     gap: 15px;
   }
+
   .search-container {
     width: 100%;
   }
+
   .stats-cards {
     flex-direction: column;
   }
+
   .chart-wrapper {
     height: 200px;
   }
+
   .table-container,
   .products-table {
     overflow-x: auto;
   }
+
   table th,
   table td {
     padding: 8px;
     font-size: 12px;
   }
-}
-
-/* Updated styles - focusing only on changes needed */
-
-/* Zebra striping for tables */
-.products-table tbody tr:nth-child(odd) {
-  background-color: var(--color-table-row-odd);
-}
-
-.products-table tbody tr:nth-child(even) {
-  background-color: var(--color-table-row-even);
-}
-
-/* Remove rounded corners from table rows to match the design */
-table tr {
-  border-radius: 0;
-}
-
-/* Ensure the text in table cells is properly visible against colored backgrounds */
-table td {
-  color: var(--color-text-primary);
 }

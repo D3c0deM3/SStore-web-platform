@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import ChartDataLabels from "chartjs-plugin-datalabels";
@@ -14,7 +14,8 @@ import {
 } from "chart.js";
 import "../styles/DashboardPage.css";
 
-import logo from "../assets/landing-page/logo-image.svg";
+// Import SVG as a React component so we can control its fill color
+import { ReactComponent as Logo } from "../assets/landing-page/logo-image.svg";
 import homeIcon from "../assets/dashboard/home-icon.svg";
 import historyIcon from "../assets/dashboard/report.svg";
 import productsIcon from "../assets/dashboard/products.svg";
@@ -22,7 +23,6 @@ import calculatorIcon from "../assets/dashboard/calculator.svg";
 import aiIcon from "../assets/dashboard/ai-icon.svg";
 import searchIcon from "../assets/dashboard/search.svg";
 import profileIcon from "../assets/dashboard/profile.png";
-
 import basicPlanIcon from "../assets/dashboard/basic.svg";
 import proPlanIcon from "../assets/dashboard/pro.svg";
 import vipPlanIcon from "../assets/dashboard/vip.svg";
@@ -37,7 +37,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   CategoryScale,
-  ChartDataLabels // Register the datalabels plugin
+  ChartDataLabels
 );
 
 const DashboardPage = () => {
@@ -50,8 +50,18 @@ const DashboardPage = () => {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [chartData, setChartData] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [quantity, setQuantity] = useState(0);
+  const [productsByPrice, setProductsByPrice] = useState([]);
+  const [profits, setProfits] = useState([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
-  // Add chartOptions state
+  // Theme & Profile Menu State
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  // Chart Options State
   const [chartOptions, setChartOptions] = useState({
     responsive: true,
     maintainAspectRatio: false,
@@ -109,17 +119,31 @@ const DashboardPage = () => {
     },
   });
 
-  // Extract data from the dashboardData for easier access
-  const [products, setProducts] = useState([]);
-  const [quantity, setQuantity] = useState(0);
-  // const [productsBySells, setProductsBySells] = useState([]); // Commented out due to ESLint no-unused-vars warning
-  const [productsByPrice, setProductsByPrice] = useState([]);
-  const [profits, setProfits] = useState([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-
   const apiBaseUrl =
     process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
+  // Apply theme class to <html> and persist
+  useEffect(() => {
+    document.documentElement.classList.toggle("light-theme", theme === "light");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  // Close profile menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showProfileMenu &&
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(e.target)
+      ) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showProfileMenu]);
+
+  // Fetch Dashboard Data
   useEffect(() => {
     const fetchDashboardData = async () => {
       const token = localStorage.getItem("token");
@@ -167,7 +191,7 @@ const DashboardPage = () => {
     }
   }, [dashboardData, navigate, apiBaseUrl]);
 
-  // Process dashboard data when it's available
+  // Process Dashboard Data
   useEffect(() => {
     if (dashboardData && Array.isArray(dashboardData)) {
       // Extract market data for user info
@@ -205,14 +229,6 @@ const DashboardPage = () => {
         setQuantity(quantityObj.quantity || 0);
       }
 
-      // Extract products by sells
-      // const productsBySellsObj = dashboardData.find(
-      //   (item) => item.products_by_sells
-      // );
-      // if (productsBySellsObj) {
-      //   setProductsBySells(productsBySellsObj.products_by_sells || []);
-      // } // Commented out due to ESLint no-unused-vars warning
-
       // Extract products by price
       const productsByPriceObj = dashboardData.find(
         (item) => item.products_by_price
@@ -236,9 +252,7 @@ const DashboardPage = () => {
     }
   }, [dashboardData, apiBaseUrl]);
 
-  console.log(user);
-
-  // UPDATED: Chart data preparation with sharp lines and color segments
+  // Chart Data Preparation
   useEffect(() => {
     if (profits.length > 0) {
       // Create evenly spaced labels for September with 5-day intervals
@@ -575,6 +589,17 @@ const DashboardPage = () => {
     }
   }, [profits]);
 
+  const toggleTheme = () =>
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+  const handleEditProfile = () => navigate("/profile/edit");
+  const handleChangeLanguage = () => {
+    /* your language-change logic here */
+  };
+
   const getPlanIcon = (planType) => {
     if (!planType) return null;
 
@@ -592,23 +617,15 @@ const DashboardPage = () => {
     return basicPlanIcon;
   };
 
-  if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
-
-  if (!dashboardData || dashboardData.length === 0) {
+  if (loading) return <div className="loading">Loading dashboard...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (!dashboardData || dashboardData.length === 0)
     return <div className="no-data">No data yet! Add your first product.</div>;
-  }
 
   return (
-    <div className="dashboard">
-      {/* Left Sidebar with Menu */}
+    <div className={`dashboard ${theme === "light" ? "light-theme" : ""}`}>
       <aside className="sidebar">
-        <img src={logo} alt="SStore Logo" className="logo" />
+        <Logo className="logo" />
         <span className="logo_underline"></span>
         <nav className="menu">
           <p className="sidebar-menu">Menu</p>
@@ -662,17 +679,13 @@ const DashboardPage = () => {
         </div>
       </aside>
 
-      {/* Content wrapper for all three sections */}
       <div className="content-wrapper">
-        {/* Main Column for Search, Stats, Chart and Top Selling - Now in the center */}
         <main className="main-content">
-          {/* Search Bar */}
           <div className="search-container">
             <img src={searchIcon} alt="Search" />
             <input type="text" placeholder="Qidiruv..." />
           </div>
 
-          {/* Stats Cards */}
           <section className="stats-cards">
             <div className="card">
               <h3>Mahsulotlar</h3>
@@ -684,7 +697,6 @@ const DashboardPage = () => {
             </div>
           </section>
 
-          {/* Chart Section */}
           <section className="chart-section">
             <div className="graph-head-content">
               <div className="graph-headline-left">
@@ -702,7 +714,6 @@ const DashboardPage = () => {
             </div>
           </section>
 
-          {/* Top Selling Products */}
           <section className="top-selling-section">
             <div className="table-container">
               <h3>Top Selling products</h3>
@@ -744,11 +755,12 @@ const DashboardPage = () => {
           </section>
         </main>
 
-        {/* Right Column for Profile and Barcha Mahsulotlar */}
         <div className="right-column">
-          {/* Profile Info */}
-          <div className="profile-section">
-            <div className="profile-container">
+          <div className="profile-section" ref={profileMenuRef}>
+            <div
+              className="profile-container"
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+            >
               {user?.profileImage ? (
                 <img
                   src={`https://res.cloudinary.com/bnf404/${user.profileImage}`}
@@ -763,18 +775,36 @@ const DashboardPage = () => {
                 />
               )}
               <div>
-                <span>{user?.name}</span>
-                <span>{user?.phone}</span>
+                <span>{user?.name || "User Name"}</span>
+                <span>{user?.phone || "+998 97 201 13 17"}</span>
               </div>
               <img
                 src={profileArrowIcon}
-                alt="arr"
+                alt="Toggle"
                 className="profile_arrow_icon"
               />
             </div>
+
+            {showProfileMenu && (
+              <div className="profile-dropdown">
+                <button onClick={handleEditProfile}>Edit Profile</button>
+                <div className="theme-toggle">
+                  <span>Light Theme</span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={theme === "light"}
+                      onChange={toggleTheme}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <button onClick={handleChangeLanguage}>Change Language</button>
+                <button onClick={handleLogout}>Log Out</button>
+              </div>
+            )}
           </div>
 
-          {/* Barcha Mahsulotlar Table - With zebra striping applied in CSS */}
           <div className="table-container products-table">
             <table>
               <thead>
