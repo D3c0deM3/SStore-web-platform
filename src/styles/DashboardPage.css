@@ -21,12 +21,13 @@
   --color-table-row-even: #2e313a;
 
   /* UI colors */
-  --color-shadow: rgba(0, 0, 0, 0.5);
+  --color-shadow: rgba(0, 0, 0, 0.3);
   --color-active: #2e313a;
   --color-hover: #2d3748;
 
   /* Menu colors */
   --color-menu-text: #aca7a7;
+  --color-text-white: #ffffff;
 }
 
 /* Light theme overrides */
@@ -53,6 +54,8 @@
   --color-active: #4c7273;
   --color-hover: #cbd5e0;
   --color-menu-text: #6c757d;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-text-white: #ffffff;
 }
 
 /* Reset */
@@ -128,7 +131,7 @@ body {
 
 .menu li.active {
   background-color: var(--color-active);
-  color: var(--color-text-primary);
+  color: var(--color-text-white);
   font-weight: bold;
   padding: 0.7rem 1rem;
   border-radius: 15px;
@@ -499,7 +502,7 @@ table td {
 }
 
 .right-column .table-container.products-table table thead th {
-  color: var(--color-text-primary);
+  color: var(--color-text-white);
 }
 
 /* Zebra striping */
