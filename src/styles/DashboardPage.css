@@ -434,6 +434,7 @@ body {
   height: calc(100% - 100px); /* Take remaining space in left column */
   overflow-y: auto;
   padding: 10px 0px;
+  padding-top: 0;
 }
 
 .table-container h3 {
@@ -475,7 +476,7 @@ table th {
 
 .products-table table th,
 .products-table table td {
-  padding: 12px 15px;
+  padding: 15px 15px;
 }
 
 table td {
