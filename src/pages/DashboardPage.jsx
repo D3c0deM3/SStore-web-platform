@@ -52,8 +52,13 @@ const DashboardPage = () => {
   const [chartData, setChartData] = useState(null);
   const [products, setProducts] = useState([]);
   const [quantity, setQuantity] = useState(0);
+  const [income, setIncom] = useState(0);
+  const [expense, setExpense] = useState(0);
+  const [soldProducts, setSoldProducts] = useState(0);
+  const [boughtProducts, setBoughtProducts] = useState(0);
   const [productsByPrice, setProductsByPrice] = useState([]);
   const [profits, setProfits] = useState([]);
+  const [current_months, setMonth] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   // Theme & Profile Menu State
@@ -229,25 +234,57 @@ const DashboardPage = () => {
         setQuantity(quantityObj.quantity || 0);
       }
 
+      // Extract incom
+      const incomeObj = dashboardData.find((item) => item.income !== undefined);
+      if (incomeObj) {
+        setIncom(incomeObj.income || 0);
+      }
+      // Extract expense
+      const expenseObj = dashboardData.find(
+        (item) => item.expanses_total !== undefined
+      );
+      if (expenseObj) {
+        setExpense(expenseObj.expanses_total || 0);
+      }
+
+      // Extract sold products
+      const soldProductsObj = dashboardData.find(
+        (item) => item.products_subbed !== undefined
+      );
+      if (soldProductsObj) {
+        setSoldProducts(soldProductsObj.products_subbed || 0);
+      }
+
+      // Extract bought products
+      const boughtProductsObj = dashboardData.find(
+        (item) => item.products_added !== undefined
+      );
+      if (boughtProductsObj) {
+        setBoughtProducts(boughtProductsObj.products_added || 0);
+      }
+
       // Extract products by price
       const productsByPriceObj = dashboardData.find(
         (item) => item.products_by_price
       );
       if (productsByPriceObj) {
         setProductsByPrice(productsByPriceObj.products_by_price || []);
-
-        // Calculate total revenue
-        const total = (productsByPriceObj.products_by_price || []).reduce(
-          (sum, product) => sum + (product.total_sold_price || 0),
-          0
-        );
-        setTotalRevenue(total);
       }
 
-      // Extract profits
+      // Extract profits and set total revenue from last profit
       const profitsObj = dashboardData.find((item) => item.profit);
-      if (profitsObj) {
-        setProfits(profitsObj.profit || []);
+      if (profitsObj && Array.isArray(profitsObj.profit)) {
+        setProfits(profitsObj.profit);
+        const lastProfit = profitsObj.profit.at(-1); // last element of profit array
+        setTotalRevenue(lastProfit || 0);
+      }
+
+      // Extract current month and set it to the variable called current_months
+      const currentMonth = dashboardData.find((item) => item.current_month);
+      if (currentMonth) {
+        setMonth(currentMonth.current_month);
+      } else {
+        setMonth("January");
       }
     }
   }, [dashboardData, apiBaseUrl]);
@@ -256,15 +293,16 @@ const DashboardPage = () => {
   useEffect(() => {
     if (profits.length > 0) {
       // Create evenly spaced labels for September with 5-day intervals
-      const labels = [
-        "1-sentyabr",
-        "5-sentyabr",
-        "10-sentyabr",
-        "15-sentyabr",
-        "20-sentyabr",
-        "25-sentyabr",
-        "30-sentyabr",
-      ];
+
+      const labels = [`1-${current_months}`];
+      for (let i = 5; i < 31; i = i + 5) {
+        if (i < profits.length) {
+          labels.push(`${i}-${current_months}`);
+        }
+      }
+      if (profits.length !== 1) {
+        labels.push(`${profits.length} - ${current_months}`);
+      }
 
       // Prepare data points from profits array
       const dataPoints = [];
@@ -587,7 +625,7 @@ const DashboardPage = () => {
         },
       });
     }
-  }, [profits]);
+  }, [profits, current_months]);
 
   const toggleTheme = () =>
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
@@ -686,14 +724,60 @@ const DashboardPage = () => {
             <input type="text" placeholder="Qidiruv..." />
           </div>
 
+          {/* Updated Stats Cards Section with infinite animation */}
           <section className="stats-cards">
-            <div className="card">
-              <h3>Mahsulotlar</h3>
-              <p>{quantity}</p>
-            </div>
-            <div className="card">
-              <h3>Joriy daromad</h3>
-              <p>{totalRevenue.toLocaleString()} UZS</p>
+            <div className="stats-cards-inner">
+              {/* Original set of cards */}
+              <div className="card card-1">
+                <h3>Mahsulotlar</h3>
+                <p>{quantity}</p>
+              </div>
+              <div className="card card-2">
+                <h3>Sof daromad</h3>
+                <p>{totalRevenue.toLocaleString()} UZS</p>
+              </div>
+              <div className="card card-3">
+                <h3>Daromad</h3>
+                <p>{income.toLocaleString()} UZS</p>
+              </div>
+              <div className="card card-4">
+                <h3>Xarajat</h3>
+                <p>{expense.toLocaleString()} UZS</p>
+              </div>
+              <div className="card card-5">
+                <h3>Sotilgan tovarlar</h3>
+                <p>{soldProducts.toLocaleString()}</p>
+              </div>
+              <div className="card card-6">
+                <h3>Kelgan tovarlar</h3>
+                <p>{boughtProducts.toLocaleString()}</p>
+              </div>
+
+              {/* Duplicate set for seamless looping */}
+              <div className="card card-1">
+                <h3>Mahsulotlar</h3>
+                <p>{quantity}</p>
+              </div>
+              <div className="card card-2">
+                <h3>Sof daromad</h3>
+                <p>{totalRevenue.toLocaleString()} UZS</p>
+              </div>
+              <div className="card card-3">
+                <h3>Daromad</h3>
+                <p>{income.toLocaleString()} UZS</p>
+              </div>
+              <div className="card card-4">
+                <h3>Xarajat</h3>
+                <p>{expense.toLocaleString()} UZS</p>
+              </div>
+              <div className="card card-5">
+                <h3>Sotilgan tovarlar</h3>
+                <p>{soldProducts.toLocaleString()}</p>
+              </div>
+              <div className="card card-6">
+                <h3>Kelgan tovarlar</h3>
+                <p>{boughtProducts.toLocaleString()}</p>
+              </div>
             </div>
           </section>
 
