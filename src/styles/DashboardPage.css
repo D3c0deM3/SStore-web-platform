@@ -83,8 +83,8 @@
   --ai-icon: url("../assets/dashboard/ai-icon-light.svg");
   --search-icon: url("../assets/dashboard/search-light.svg");
   --profile-icon: url("../assets/dashboard/profile.png");
-  --basic-plan-icon: url("../assets/dashboard/basic.svg");
-  --pro-plan-icon: url("../assets/dashboard/pro.svg");
+  --basic-plan-icon: url("../assets/dashboard/basic-light.svg");
+  --pro-plan-icon: url("../assets/dashboard/pro-light.svg");
   --vip-plan-icon: url("../assets/dashboard/vip-light.svg");
   --profile-arrow-icon: url("../assets/dashboard/down_arrow-light.svg");
   --graph-icon: url("../assets/dashboard/graph-icon-light.svg");
@@ -495,6 +495,16 @@ body {
 .card p {
   font-size: 22px;
   font-weight: 600;
+}
+
+.card-2 {
+  color: #11d711;
+}
+.card-3 {
+  color: #1bc5a8;
+}
+.card-4 {
+  color: #fe2916;
 }
 
 /* Animation keyframes */
