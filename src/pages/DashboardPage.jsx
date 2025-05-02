@@ -14,21 +14,6 @@ import {
 } from "chart.js";
 import "../styles/DashboardPage.css";
 
-// Import SVG as a React component so we can control its fill color
-import { ReactComponent as Logo } from "../assets/landing-page/logo-image.svg";
-import homeIcon from "../assets/dashboard/home-icon.svg";
-import historyIcon from "../assets/dashboard/report.svg";
-import productsIcon from "../assets/dashboard/products.svg";
-import calculatorIcon from "../assets/dashboard/calculator.svg";
-import aiIcon from "../assets/dashboard/ai-icon.svg";
-import searchIcon from "../assets/dashboard/search.svg";
-import profileIcon from "../assets/dashboard/profile.png";
-import basicPlanIcon from "../assets/dashboard/basic.svg";
-import proPlanIcon from "../assets/dashboard/pro.svg";
-import vipPlanIcon from "../assets/dashboard/vip.svg";
-import profileArrowIcon from "../assets/dashboard/down_arrow.svg";
-import graphIcon from "../assets/dashboard/graph-icon.svg";
-
 ChartJS.register(
   LineElement,
   PointElement,
@@ -292,8 +277,33 @@ const DashboardPage = () => {
   // Chart Data Preparation
   useEffect(() => {
     if (profits.length > 0) {
-      // Create evenly spaced labels for September with 5-day intervals
+      // Validate profits data
+      if (profits.every((val, i, arr) => val === arr[0])) {
+        console.warn("All profit values are identical, chart may appear flat.");
+      }
+      if (profits.length < 2) {
+        console.warn("Insufficient profit data points for meaningful chart.");
+      }
 
+      // Prepare data points
+      const dataPoints = [];
+      const maxPoints = 7;
+
+      if (profits.length === 1) {
+        dataPoints.push(profits[0]);
+        for (let i = 1; i < maxPoints; i++) {
+          dataPoints.push(null);
+        }
+      } else {
+        for (let i = 0; i < Math.min(profits.length, maxPoints); i++) {
+          dataPoints.push(profits[i]);
+        }
+        for (let i = profits.length; i < maxPoints; i++) {
+          dataPoints.push(null);
+        }
+      }
+
+      // Prepare labels
       const labels = [`1-${current_months}`];
       for (let i = 5; i < 31; i = i + 5) {
         if (i < profits.length) {
@@ -304,35 +314,16 @@ const DashboardPage = () => {
         labels.push(`${profits.length} - ${current_months}`);
       }
 
-      // Prepare data points from profits array
-      const dataPoints = [];
+      // Calculate y-axis scale
+      const maxProfit = profits.length > 0 ? Math.max(...profits) : 0;
+      const minProfit = profits.length > 0 ? Math.min(...profits) : 0;
+      const yAxisMax = Math.ceil((maxProfit * 1.2) / 1000000) * 1000000;
+      const yAxisMin = Math.max(
+        0,
+        Math.floor((minProfit * 0.8) / 1000000) * 1000000
+      );
 
-      if (profits.length === 1) {
-        // If only one data point, repeat it
-        for (let i = 0; i < 7; i++) {
-          dataPoints.push(profits[0]);
-        }
-      } else if (profits.length < 7) {
-        // Linear interpolation for fewer data points
-        const step = (profits.length - 1) / 6;
-        for (let i = 0; i < 7; i++) {
-          const index = Math.min(profits.length - 1, Math.floor(i * step));
-          dataPoints.push(profits[index]);
-        }
-      } else {
-        // If we have more data points, sample them
-        const step = (profits.length - 1) / 6;
-        for (let i = 0; i < 7; i++) {
-          const index = Math.min(profits.length - 1, Math.floor(i * step));
-          dataPoints.push(profits[index]);
-        }
-      }
-
-      // Find max and min for setting y-axis scale properly
-      const maxProfit = Math.max(...dataPoints);
-      const minProfit = Math.min(...dataPoints);
-      const yAxisMax = Math.ceil((maxProfit * 1.2) / 1000000) * 1000000; // Round up to nearest million and add 20% padding
-
+      // Set chart data
       setChartData({
         labels: labels,
         datasets: [
@@ -340,96 +331,84 @@ const DashboardPage = () => {
             label: "Profit",
             data: dataPoints,
             borderColor: (context) => {
-              // Check if we're between points
-              if (context.dataIndex > 0) {
-                const prev = context.dataset.data[context.dataIndex - 1];
-                const curr = context.dataset.data[context.dataIndex];
-                // Return green for upward trends, red for downward
+              if (
+                context.dataIndex > 0 &&
+                dataPoints[context.dataIndex] !== null
+              ) {
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const curr = dataPoints[context.dataIndex];
                 return prev < curr ? "#4ade80" : "#ff4d4f";
               }
-              return "#4ade80"; // Default color
+              return "#4ade80";
             },
             segment: {
               borderColor: (ctx) =>
                 ctx.p0.parsed.y < ctx.p1.parsed.y ? "#4ade80" : "#ff4d4f",
             },
-            tension: 0, // Set to 0 for sharp lines instead of smooth curves
+            tension: 0,
             borderWidth: 3,
-            pointRadius: 4, // Make points visible to show extreme values
+            pointRadius: 4,
             pointBackgroundColor: function (context) {
               const value = context.dataset.data[context.dataIndex];
-              // If this is a local max or min, use appropriate color
+              if (value === null) return "transparent";
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // Check if it's a local maximum or minimum
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
                 if (
                   (value > prev && value > next) ||
                   (value < prev && value < next)
                 ) {
                   return value >= prev ? "#4ade80" : "#ff4d4f";
                 }
-              }
-              // For first and last points
-              else if (
+              } else if (
                 context.dataIndex === 0 ||
                 context.dataIndex === dataPoints.length - 1
               ) {
-                return "#FFFFFF"; // White for start/end points
+                return "#FFFFFF";
               }
-
-              return "transparent"; // Hide non-extreme points
+              return "transparent";
             },
             pointBorderColor: function (context) {
               const value = context.dataset.data[context.dataIndex];
-              // If this is a local max or min, use appropriate color
+              if (value === null) return "transparent";
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // Check if it's a local maximum or minimum
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
                 if (
                   (value > prev && value > next) ||
                   (value < prev && value < next)
                 ) {
                   return value >= prev ? "#4ade80" : "#ff4d4f";
                 }
-              }
-              // For first and last points
-              else if (
+              } else if (
                 context.dataIndex === 0 ||
                 context.dataIndex === dataPoints.length - 1
               ) {
-                return "#FFFFFF"; // White for start/end points
+                return "#FFFFFF";
               }
-
-              return "transparent"; // Hide non-extreme points
+              return "transparent";
             },
             fill: false,
           },
         ],
       });
 
-      // Update chart options with dynamic scale based on data
+      // Update chart options
       setChartOptions({
         responsive: true,
         maintainAspectRatio: false,
         scales: {
           y: {
-            beginAtZero: false, // Don't force zero if not needed
-            suggestedMin: Math.max(0, minProfit * 0.8), // Lower bound with 20% padding but not below zero
-            suggestedMax: yAxisMax, // Upper bound with padding
-            grid: {
-              color: "rgba(255, 255, 255, 0.1)",
-              drawBorder: false,
-            },
+            beginAtZero: false,
+            suggestedMin: yAxisMin,
+            suggestedMax: yAxisMax,
+            grid: { color: "rgba(255, 255, 255, 0.1)", drawBorder: false },
             ticks: {
               color: "#a0aec0",
               callback: function (value) {
@@ -437,24 +416,17 @@ const DashboardPage = () => {
                 else if (value >= 1000) return value / 1000 + "K";
                 return value;
               },
-              // Dynamically set step size based on range
-              stepSize: Math.ceil(yAxisMax / 5 / 1000000) * 1000000,
+              stepSize:
+                Math.ceil((yAxisMax - yAxisMin) / 5 / 1000000) * 1000000,
             },
           },
           x: {
-            grid: {
-              color: "rgba(255, 255, 255, 0.1)",
-              drawBorder: false,
-            },
-            ticks: {
-              color: "#a0aec0",
-            },
+            grid: { color: "rgba(255, 255, 255, 0.1)", drawBorder: false },
+            ticks: { color: "#a0aec0" },
           },
         },
         plugins: {
-          legend: {
-            display: false,
-          },
+          legend: { display: false },
           tooltip: {
             enabled: true,
             callbacks: {
@@ -467,40 +439,31 @@ const DashboardPage = () => {
               },
             },
           },
-          // Updated datalabels configuration to always show extreme points
           datalabels: {
             align: function (context) {
               const value = context.dataset.data[context.dataIndex];
+              if (value === null) return "center";
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // For peaks (local maxima), align on top
-                if (value > prev && value > next) {
-                  return "top";
-                }
-                // For valleys (local minima), align below
-                else if (value < prev && value < next) {
-                  return "bottom";
-                }
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
+                if (value > prev && value > next) return "top";
+                else if (value < prev && value < next) return "bottom";
               }
               return "center";
             },
             anchor: "center",
             color: function (context) {
               const value = context.dataset.data[context.dataIndex];
-              // Check if this is an extreme point
+              if (value === null) return "transparent";
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // Check if it's a local maximum or minimum
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
                 if (
                   (value > prev && value > next) ||
                   (value < prev && value < next)
@@ -508,18 +471,17 @@ const DashboardPage = () => {
                   return value >= prev ? "#4ade80" : "#ff4d4f";
                 }
               }
-              return "transparent"; // Hide non-extreme labels
+              return "transparent";
             },
             backgroundColor: function (context) {
               const value = context.dataset.data[context.dataIndex];
-              // Add a slight background to make labels more readable
+              if (value === null) return "transparent";
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
                 if (
                   (value > prev && value > next) ||
                   (value < prev && value < next)
@@ -530,100 +492,68 @@ const DashboardPage = () => {
               return "transparent";
             },
             borderRadius: 4,
-            formatter: function (value, context) {
-              // Format for extreme points
-              if (
-                context.dataIndex > 0 &&
-                context.dataIndex < dataPoints.length - 1
-              ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // Check if it's a local maximum or minimum
-                if (
-                  (value > prev && value > next) ||
-                  (value < prev && value < next)
-                ) {
-                  if (value >= 1000000)
-                    return (value / 1000000).toFixed(1) + "M";
-                  if (value >= 1000) return (value / 1000).toFixed(0) + "K";
-                  return value.toLocaleString();
-                }
-              }
-              return ""; // Hide non-extreme labels
+            formatter: function (value) {
+              if (value === null) return "";
+              if (value >= 1000000) return (value / 1000000).toFixed(1) + "M";
+              if (value >= 1000) return (value / 1000).toFixed(0) + "K";
+              return value.toLocaleString();
             },
-            // Always display for extreme points, no hover needed
             display: function (context) {
               const value = context.dataset.data[context.dataIndex];
-              // Only show extreme points
+              if (value === null) return false;
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // Check if it's a local maximum or minimum
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
                 return (
                   (value > prev && value > next) ||
                   (value < prev && value < next)
                 );
               }
-              return false; // Hide non-extreme labels
+              return false;
             },
-            font: {
-              weight: "bold",
-              size: 12,
-            },
-            padding: {
-              top: 5,
-              bottom: 5,
-              left: 8,
-              right: 8,
-            },
-            offset: 8, // Distance from the point
+            font: { weight: "bold", size: 12 },
+            padding: { top: 5, bottom: 5, left: 8, right: 8 },
+            offset: 8,
           },
         },
         elements: {
-          line: {
-            tension: 0, // Sharp lines
-          },
+          line: { tension: 0 },
           point: {
             radius: function (context) {
               const value = context.dataset.data[context.dataIndex];
-              // Make extreme points more visible
+              if (value === null) return 0;
               if (
                 context.dataIndex > 0 &&
                 context.dataIndex < dataPoints.length - 1
               ) {
-                const prev = dataPoints[context.dataIndex - 1];
-                const next = dataPoints[context.dataIndex + 1];
-
-                // Check if it's a local maximum or minimum
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
                 if (
                   (value > prev && value > next) ||
                   (value < prev && value < next)
                 ) {
-                  return 6; // Larger radius for extreme points
+                  return 6;
                 }
-              }
-              // Show first and last points with smaller radius
-              else if (
+              } else if (
                 context.dataIndex === 0 ||
                 context.dataIndex === dataPoints.length - 1
               ) {
                 return 3;
               }
-              return 0; // Hide non-extreme points when not hovering
+              return 0;
             },
-            hoverRadius: 6, // Radius when hovering
+            hoverRadius: 6,
           },
         },
-        hover: {
-          mode: "nearest",
-          intersect: true,
-        },
+        hover: { mode: "nearest", intersect: true },
       });
+
+      console.log("Profits:", profits);
+      console.log("Data Points:", dataPoints);
+      console.log("Labels:", labels);
     }
   }, [profits, current_months]);
 
@@ -638,21 +568,13 @@ const DashboardPage = () => {
     /* your language-change logic here */
   };
 
-  const getPlanIcon = (planType) => {
-    if (!planType) return null;
-
+  const getPlanIconClass = (planType) => {
+    if (!planType) return "";
     const planTypeLower = planType.toLowerCase();
-
-    if (planTypeLower.includes("basic")) {
-      return basicPlanIcon;
-    } else if (planTypeLower.includes("pro")) {
-      return proPlanIcon;
-    } else if (planTypeLower.includes("vip")) {
-      return vipPlanIcon;
-    }
-
-    // Default to basic if unknown
-    return basicPlanIcon;
+    if (planTypeLower.includes("basic")) return "basic";
+    if (planTypeLower.includes("pro")) return "pro";
+    if (planTypeLower.includes("vip")) return "vip";
+    return "basic"; // Default to basic if unknown
   };
 
   if (loading) return <div className="loading">Loading dashboard...</div>;
@@ -663,7 +585,7 @@ const DashboardPage = () => {
   return (
     <div className={`dashboard ${theme === "light" ? "light-theme" : ""}`}>
       <aside className="sidebar">
-        <Logo className="logo" />
+        <div className="logo" />
         <span className="logo_underline"></span>
         <nav className="menu">
           <p className="sidebar-menu">Menu</p>
@@ -672,46 +594,42 @@ const DashboardPage = () => {
               className={location.pathname === "/dashboard" ? "active" : ""}
               onClick={() => navigate("/dashboard")}
             >
-              <img src={homeIcon} alt="Home" />
+              <span className="icon home-icon" />
               Asosiy sahifa
             </li>
             <li
               className={location.pathname === "/hisobotlar" ? "active" : ""}
               onClick={() => navigate("/hisobotlar")}
             >
-              <img src={historyIcon} alt="History" />
+              <span className="icon history-icon" />
               Hisobotlar
             </li>
             <li
               className={location.pathname === "/mahsulotlar" ? "active" : ""}
               onClick={() => navigate("/mahsulotlar")}
             >
-              <img src={productsIcon} alt="Products" />
+              <span className="icon products-icon" />
               Mahsulotlar
             </li>
             <li
               className={location.pathname === "/kalkulyator" ? "active" : ""}
               onClick={() => navigate("/kalkulyator")}
             >
-              <img src={calculatorIcon} alt="Calculator" />
+              <span className="icon calculator-icon" />
               Kalkulyator
             </li>
             <li
               className={location.pathname === "/ai-maslahat" ? "active" : ""}
               onClick={() => navigate("/ai-maslahat")}
             >
-              <img src={aiIcon} alt="AI" />
+              <span className="icon ai-icon" />
               AI maslahat
             </li>
           </ul>
         </nav>
         <div className="vip-plan">
           {user?.plan && (
-            <img
-              src={getPlanIcon(user.plan)}
-              alt={`${user.plan} Icon`}
-              className="plan-icon"
-            />
+            <span className={`plan-icon ${getPlanIconClass(user.plan)}`} />
           )}
           {user?.plan} PLAN
         </div>
@@ -720,7 +638,7 @@ const DashboardPage = () => {
       <div className="content-wrapper">
         <main className="main-content">
           <div className="search-container">
-            <img src={searchIcon} alt="Search" />
+            <span className="search-icon" />
             <input type="text" placeholder="Qidiruv..." />
           </div>
 
@@ -784,7 +702,7 @@ const DashboardPage = () => {
           <section className="chart-section">
             <div className="graph-head-content">
               <div className="graph-headline-left">
-                <img src={graphIcon} alt="" />
+                <span className="graph-icon" />
                 <h3>Oylik Sof Foyda</h3>
               </div>
               <span className="more-button">batafsil →</span>
@@ -846,27 +764,20 @@ const DashboardPage = () => {
               onClick={() => setShowProfileMenu((prev) => !prev)}
             >
               {user?.profileImage ? (
-                <img
-                  src={`https://res.cloudinary.com/bnf404/${user.profileImage}`}
-                  alt="Profile"
+                <div
                   className="profile-pic"
+                  style={{
+                    backgroundImage: `url(https://res.cloudinary.com/bnf404/${user.profileImage})`,
+                  }}
                 />
               ) : (
-                <img
-                  src={profileIcon}
-                  alt="Profile Icon"
-                  className="profile-pic"
-                />
+                <div className="profile-pic default" />
               )}
               <div>
                 <span>{user?.name || "User Name"}</span>
                 <span>{user?.phone || "+998 97 201 13 17"}</span>
               </div>
-              <img
-                src={profileArrowIcon}
-                alt="Toggle"
-                className="profile_arrow_icon"
-              />
+              <span className="profile_arrow_icon" />
             </div>
 
             {showProfileMenu && (

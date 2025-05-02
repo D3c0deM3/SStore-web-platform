@@ -28,6 +28,22 @@
   /* Menu colors */
   --color-menu-text: #aca7a7;
   --color-text-white: #ffffff;
+  --color-text-plan: #ffffff;
+
+  /* Icon and Logo URLs */
+  --logo-image: url("../assets/dashboard/logo.svg");
+  --home-icon: url("../assets/dashboard/home-icon.svg");
+  --history-icon: url("../assets/dashboard/report.svg");
+  --products-icon: url("../assets/dashboard/products.svg");
+  --calculator-icon: url("../assets/dashboard/calculator.svg");
+  --ai-icon: url("../assets/dashboard/ai-icon.svg");
+  --search-icon: url("../assets/dashboard/search.svg");
+  --profile-icon: url("../assets/dashboard/profile.png");
+  --basic-plan-icon: url("../assets/dashboard/basic.svg");
+  --pro-plan-icon: url("../assets/dashboard/pro.svg");
+  --vip-plan-icon: url("../assets/dashboard/vip.svg");
+  --profile-arrow-icon: url("../assets/dashboard/down_arrow.svg");
+  --graph-icon: url("../assets/dashboard/graph-icon.svg");
 }
 
 /* Light theme overrides */
@@ -56,6 +72,22 @@
   --color-menu-text: #6c757d;
   --color-shadow: rgba(0, 0, 0, 0.1);
   --color-text-white: #ffffff;
+  --color-text-plan: #4c7273;
+
+  /* Icon and Logo URLs for light theme (use same or different assets) */
+  --logo-image: url("../assets/landing-page/logo-light-theme.svg"); /* Adjust if different */
+  --home-icon: url("../assets/dashboard/home-icon.svg");
+  --history-icon: url("../assets/dashboard/reports-light.svg");
+  --products-icon: url("../assets/dashboard/products-light.svg");
+  --calculator-icon: url("../assets/dashboard/calculator-light.svg");
+  --ai-icon: url("../assets/dashboard/ai-icon-light.svg");
+  --search-icon: url("../assets/dashboard/search-light.svg");
+  --profile-icon: url("../assets/dashboard/profile.png");
+  --basic-plan-icon: url("../assets/dashboard/basic.svg");
+  --pro-plan-icon: url("../assets/dashboard/pro.svg");
+  --vip-plan-icon: url("../assets/dashboard/vip-light.svg");
+  --profile-arrow-icon: url("../assets/dashboard/down_arrow-light.svg");
+  --graph-icon: url("../assets/dashboard/graph-icon-light.svg");
 }
 
 /* Reset */
@@ -80,7 +112,11 @@ body {
 /* LOGO */
 .logo {
   height: 40px;
-  fill: var(--color-logo);
+  width: 100%;
+  background-image: var(--logo-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   margin-bottom: 25px;
 }
 
@@ -117,16 +153,39 @@ body {
   align-items: center;
   padding: 12px 0;
   margin-bottom: 10px;
-  color: var(--color-text-primary);
+  color: var(--color-text-plan);
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
   gap: 12px;
 }
 
-.menu li img {
+.menu li .icon {
   width: 20px;
   height: 20px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.menu li .home-icon {
+  background-image: var(--home-icon);
+}
+
+.menu li .history-icon {
+  background-image: var(--history-icon);
+}
+
+.menu li .products-icon {
+  background-image: var(--products-icon);
+}
+
+.menu li .calculator-icon {
+  background-image: var(--calculator-icon);
+}
+
+.menu li .ai-icon {
+  background-image: var(--ai-icon);
 }
 
 .menu li.active {
@@ -148,7 +207,7 @@ body {
 /* VIP Plan */
 .vip-plan {
   background-color: var(--color-bg-primary);
-  border: 2px solid var(--color-text-primary);
+  border: 2px solid var(--color-text-plan);
   padding: 10px 0;
   border-radius: 8px;
   text-align: center;
@@ -156,36 +215,54 @@ body {
   font-size: 14px;
   cursor: pointer;
   margin-top: auto;
-  color: var(--color-text-primary);
+  color: var(--color-text-plan);
   min-width: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .plan-icon {
-  margin-right: 8px;
   width: 20px;
   height: 20px;
-  vertical-align: middle;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.plan-icon.basic {
+  background-image: var(--basic-plan-icon);
+}
+
+.plan-icon.pro {
+  background-image: var(--pro-plan-icon);
+}
+
+.plan-icon.vip {
+  background-image: var(--vip-plan-icon);
 }
 
 .content-wrapper {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px; /* Main content takes available space, right column fixed */
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 20px;
   flex: 1;
 }
 
 @media (max-width: 1200px) {
   .content-wrapper {
-    grid-template-columns: 1fr; /* Stack vertically */
-    grid-template-rows: auto auto; /* Main content, then right column */
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
   }
 
   .right-column {
     width: 100%;
-    max-height: none; /* Remove height restriction */
-    margin-top: 0; /* Remove brittle margin */
+    max-height: none;
+    margin-top: 0;
   }
 }
+
 /* Main content */
 .main-content {
   flex: 1;
@@ -212,8 +289,13 @@ body {
   box-shadow: 0 4px 6px var(--color-shadow);
 }
 
-.search-container img {
+.search-icon {
   width: 18px;
+  height: 18px;
+  background-image: var(--search-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   margin-right: 10px;
 }
 
@@ -259,12 +341,22 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.profile-pic.default {
+  background-image: var(--profile-icon);
 }
 
 .profile_arrow_icon {
   width: 24px;
   height: 24px;
+  background-image: var(--profile-arrow-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   margin-left: auto;
 }
 
@@ -366,7 +458,7 @@ body {
   display: flex;
   gap: 20px;
   margin-bottom: 25px;
-  overflow-x: hidden; /* Hide overflow but allow animation to work */
+  overflow-x: hidden;
   padding: 10px 0;
   width: 100%;
 }
@@ -374,16 +466,16 @@ body {
 .stats-cards-inner {
   display: flex;
   gap: 20px;
-  animation: slideCards 30s linear infinite; /* Adjust speed as needed */
+  animation: slideCards 30s linear infinite;
   white-space: nowrap;
 }
 
 .card {
   background-color: var(--color-bg-secondary);
-  min-width: 220px; /* Fixed width for consistent animation */
+  min-width: 220px;
   padding: 20px;
   border-radius: 10px;
-  flex: 0 0 auto; /* Prevent flex shrinking/growing */
+  flex: 0 0 auto;
   box-shadow: 0 4px 6px var(--color-shadow);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -411,9 +503,7 @@ body {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(
-      calc(-220px * 6 - 20px * 6)
-    ); /* Move by total width of all cards + gaps */
+    transform: translateX(calc(-220px * 6 - 20px * 6));
   }
 }
 
@@ -425,7 +515,7 @@ body {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .stats-cards-inner {
-    animation: slideCards 20s linear infinite; /* Faster on mobile */
+    animation: slideCards 20s linear infinite;
   }
 
   .card {
@@ -441,6 +531,7 @@ body {
     }
   }
 }
+
 /* Chart Section */
 .chart-section {
   background-color: var(--color-bg-secondary);
@@ -468,8 +559,14 @@ body {
   gap: 10px;
 }
 
-.graph-headline-left img {
-  padding-bottom: 15px;
+.graph-icon {
+  width: 20px;
+  height: 20px;
+  background-image: var(--graph-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-bottom: 15px;
 }
 
 .more-button {
@@ -501,7 +598,7 @@ body {
 }
 
 .products-table {
-  height: calc(100% - 100px); /* Take remaining space in left column */
+  height: calc(100% - 100px);
   overflow-y: auto;
   padding: 10px 0px;
   padding-top: 0;
@@ -515,7 +612,7 @@ body {
   align-items: center;
 }
 
-.table-container h3::after {
+.table-container h *::after {
   content: "batafsil →";
   font-size: 12px;
   font-weight: normal;
@@ -633,6 +730,10 @@ table td {
     display: none;
   }
 
+  .menu li .icon {
+    margin: 0 auto;
+  }
+
   .vip-plan {
     font-size: 10px;
   }
@@ -643,40 +744,35 @@ table td {
   .content-wrapper {
     display: flex;
     gap: 20px;
-    align-items: flex-start; /* ensure children align at top */
+    align-items: flex-start;
   }
 
-  /* sidebar stays where it is */
   .sidebar {
     display: block;
     flex: 0 0 230px;
   }
 
-  /* hide profile panel completely */
   .profile-section {
     display: none !important;
   }
 
-  /* main-content fills available space */
   .main-content {
     flex: 1;
   }
 
-  /* only show the products table in the right column */
   .right-column {
     flex: 0 0 280px;
     padding: 0;
     background: none;
     display: flex;
     flex-direction: column;
-    margin-top: 550px; /* ← adjust this until it lines up under Top-Selling */
+    margin-top: 550px;
   }
 
   .right-column > :not(.products-table) {
     display: none !important;
   }
 
-  /* style the table container */
   .products-table {
     background-color: var(--color-bg-secondary);
     border-radius: 10px;
