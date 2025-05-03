@@ -446,7 +446,7 @@ const DashboardPage = () => {
             beginAtZero: false,
             suggestedMin: yAxisMin,
             suggestedMax: yAxisMax,
-            grid: { color: "rgba(255, 255, 255, 0.1)", drawBorder: false },
+            grid: { color: "rgba(160, 174, 192, 0.2)", drawBorder: false },
             ticks: {
               color: "#a0aec0",
               callback: function (value) {
@@ -459,7 +459,7 @@ const DashboardPage = () => {
             },
           },
           x: {
-            grid: { color: "rgba(255, 255, 255, 0.1)", drawBorder: false },
+            grid: { color: "rgba(160, 174, 192, 0.2)", drawBorder: false },
             ticks: {
               color: "#a0aec0",
               callback: function (value, index, values) {
