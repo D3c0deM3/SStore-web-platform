@@ -275,6 +275,7 @@ const DashboardPage = () => {
   }, [dashboardData, apiBaseUrl]);
 
   // Chart Data Preparation
+  // Chart Data Preparation
   useEffect(() => {
     if (profits.length > 0) {
       // Validate profits data
@@ -286,37 +287,58 @@ const DashboardPage = () => {
       }
 
       // Prepare data points
-      const dataPoints = [];
       const maxPoints = 7;
+      const dataPoints = [];
+      // const displayPoints = Math.min(profits.length, maxPoints);
 
-      if (profits.length === 1) {
-        dataPoints.push(profits[0]);
-        for (let i = 1; i < maxPoints; i++) {
-          dataPoints.push(null);
-        }
-      } else {
-        for (let i = 0; i < Math.min(profits.length, maxPoints); i++) {
-          dataPoints.push(profits[i]);
-        }
-        for (let i = profits.length; i < maxPoints; i++) {
-          dataPoints.push(null);
-        }
+      // Take the most recent days if more than maxPoints
+      const startIndex = Math.max(0, profits.length - maxPoints);
+      const recentProfits = profits.slice(startIndex);
+
+      for (let i = 0; i < recentProfits.length; i++) {
+        dataPoints.push(recentProfits[i]);
+      }
+      for (let i = recentProfits.length; i < maxPoints; i++) {
+        dataPoints.push(null);
       }
 
       // Prepare labels
-      const labels = [`1-${current_months}`];
-      for (let i = 5; i < 31; i = i + 5) {
-        if (i < profits.length) {
-          labels.push(`${i}-${current_months}`);
+      const labels = [];
+      const days = profits.length; // Total days of data
+      const labelDays = []; // Days to label
+
+      // Always include the 1st day
+      labelDays.push(1);
+
+      // For days 1 to 5, include every day if data exists
+      if (days <= 5) {
+        for (let i = 2; i <= Math.min(days, 5); i++) {
+          labelDays.push(i);
+        }
+      } else {
+        // Include every 5th day up to the last milestone
+        for (let i = 5; i <= days; i += 5) {
+          labelDays.push(i);
+        }
+        // Always include the last day if not already included
+        if (days > 1 && !labelDays.includes(days)) {
+          labelDays.push(days);
         }
       }
-      if (profits.length !== 1) {
-        labels.push(`${profits.length} - ${current_months}`);
+
+      // Generate labels for the selected days
+      for (let i = 0; i < maxPoints; i++) {
+        const dayIndex = startIndex + i + 1; // 1-based day index
+        if (i < recentProfits.length && labelDays.includes(dayIndex)) {
+          labels.push(`${dayIndex}-${current_months}`);
+        } else {
+          labels.push(""); // Empty label for non-labeled points
+        }
       }
 
       // Calculate y-axis scale
-      const maxProfit = profits.length > 0 ? Math.max(...profits) : 0;
-      const minProfit = profits.length > 0 ? Math.min(...profits) : 0;
+      const maxProfit = Math.max(...recentProfits);
+      const minProfit = Math.min(...recentProfits);
       const yAxisMax = Math.ceil((maxProfit * 1.2) / 1000000) * 1000000;
       const yAxisMin = Math.max(
         0,
@@ -330,25 +352,41 @@ const DashboardPage = () => {
           {
             label: "Profit",
             data: dataPoints,
-            borderColor: (context) => {
-              if (
-                context.dataIndex > 0 &&
-                dataPoints[context.dataIndex] !== null
-              ) {
-                const prev = dataPoints[context.dataIndex - 1] || 0;
-                const curr = dataPoints[context.dataIndex];
-                return prev < curr ? "#4ade80" : "#ff4d4f";
-              }
-              return "#4ade80";
-            },
+            borderColor: profits.length === 1 ? "transparent" : "#4ade80", // No line for single point
             segment: {
               borderColor: (ctx) =>
-                ctx.p0.parsed.y < ctx.p1.parsed.y ? "#4ade80" : "#ff4d4f",
+                profits.length === 1
+                  ? "transparent"
+                  : ctx.p0.parsed.y < ctx.p1.parsed.y
+                  ? "#4ade80"
+                  : "#ff4d4f",
             },
             tension: 0,
-            borderWidth: 3,
-            pointRadius: 4,
-            pointBackgroundColor: function (context) {
+            borderWidth: profits.length === 1 ? 0 : 3, // No line for single point
+            pointRadius: (context) => {
+              const value = context.dataset.data[context.dataIndex];
+              if (value === null) return 0;
+              if (
+                context.dataIndex > 0 &&
+                context.dataIndex < dataPoints.length - 1
+              ) {
+                const prev = dataPoints[context.dataIndex - 1] || 0;
+                const next = dataPoints[context.dataIndex + 1] || 0;
+                if (
+                  (value > prev && value > next) ||
+                  (value < prev && value < next)
+                ) {
+                  return 6;
+                }
+              } else if (
+                context.dataIndex === 0 ||
+                context.dataIndex === dataPoints.length - 1
+              ) {
+                return 3;
+              }
+              return 0;
+            },
+            pointBackgroundColor: (context) => {
               const value = context.dataset.data[context.dataIndex];
               if (value === null) return "transparent";
               if (
@@ -371,7 +409,7 @@ const DashboardPage = () => {
               }
               return "transparent";
             },
-            pointBorderColor: function (context) {
+            pointBorderColor: (context) => {
               const value = context.dataset.data[context.dataIndex];
               if (value === null) return "transparent";
               if (
@@ -422,7 +460,12 @@ const DashboardPage = () => {
           },
           x: {
             grid: { color: "rgba(255, 255, 255, 0.1)", drawBorder: false },
-            ticks: { color: "#a0aec0" },
+            ticks: {
+              color: "#a0aec0",
+              callback: function (value, index, values) {
+                return labels[index] || ""; // Only show defined labels
+              },
+            },
           },
         },
         plugins: {
