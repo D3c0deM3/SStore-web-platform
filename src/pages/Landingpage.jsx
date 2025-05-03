@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/LandingPage.css";
-import logo from "../assets/landing-page/logo-image.svg";
+import logo from "../assets/landing-page/logo-landing.svg";
 import heroImage from "../assets/landing-page/hero-image.svg";
 
 const LandingPage = () => {
@@ -46,7 +46,7 @@ const LandingPage = () => {
     <div>
       {/* Navbar */}
       <header className={`navbar ${isSticky ? "sticky" : ""}`} id="navbar">
-        <div className="logo">
+        <div className="logo-landing">
           <img src={logo} alt="LOGO" className="logo-img" />
         </div>
         <div

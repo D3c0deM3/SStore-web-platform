@@ -75,7 +75,7 @@
   --color-text-plan: #4c7273;
 
   /* Icon and Logo URLs for light theme (use same or different assets) */
-  --logo-image: url("../assets/landing-page/logo-light-theme.svg"); /* Adjust if different */
+  --logo-image: url("../assets/dashboard/logo-light-theme.svg"); /* Adjust if different */
   --home-icon: url("../assets/dashboard/home-icon.svg");
   --history-icon: url("../assets/dashboard/reports-light.svg");
   --products-icon: url("../assets/dashboard/products-light.svg");
@@ -586,6 +586,7 @@ body {
   background-color: var(--color-success-bg);
   padding: 5px 10px;
   border-radius: 6px;
+  margin-bottom: 15px;
 }
 
 .chart-wrapper {
