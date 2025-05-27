@@ -11,14 +11,6 @@ const ProductsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState({});
 
-  // API stats from response
-  const [apiStats, setApiStats] = useState({
-    products_quantity: 0,
-    available_products: 0,
-    few_products: 0,
-    ended_products: 0,
-  });
-
   const apiBaseUrl =
     process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
@@ -42,12 +34,6 @@ const ProductsPage = () => {
         if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
         setProducts(data.products || []);
-        setApiStats({
-          products_quantity: data.products_quantity || 0,
-          available_products: data.available_products || 0,
-          few_products: data.few_products || 0,
-          ended_products: data.ended_products || 0,
-        });
         setLoading(false);
       } catch (error) {
         setError(error.message);
@@ -93,17 +79,18 @@ const ProductsPage = () => {
     return categories[categoryId] || "Boshqa";
   };
 
-  // Calculate percentages for progress bar
-  const totalProducts = apiStats.products_quantity;
+  // Calculate mutually exclusive product status counts for progress bar and legend
+  const availableCount = products.filter((p) => p.quantity > 50).length;
+  const fewCount = products.filter(
+    (p) => p.quantity > 0 && p.quantity <= 50
+  ).length;
+  const endedCount = products.filter((p) => p.quantity <= 0).length;
+  const totalProducts = availableCount + fewCount + endedCount;
   const availablePercent = totalProducts
-    ? (apiStats.available_products / totalProducts) * 100
+    ? (availableCount / totalProducts) * 100
     : 0;
-  const fewPercent = totalProducts
-    ? (apiStats.few_products / totalProducts) * 100
-    : 0;
-  const endedPercent = totalProducts
-    ? (apiStats.ended_products / totalProducts) * 100
-    : 0;
+  const fewPercent = totalProducts ? (fewCount / totalProducts) * 100 : 0;
+  const endedPercent = totalProducts ? (endedCount / totalProducts) * 100 : 0;
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,15 +129,15 @@ const ProductsPage = () => {
             <div className="stats-legend">
               <div className="legend-item">
                 <span className="legend-dot green"></span>
-                <span>Bor: {apiStats.available_products}</span>
+                <span>Bor: {availableCount}</span>
               </div>
               <div className="legend-item">
                 <span className="legend-dot yellow"></span>
-                <span>Kam qolgan: {apiStats.few_products}</span>
+                <span>Kam qolgan: {fewCount}</span>
               </div>
               <div className="legend-item">
                 <span className="legend-dot red"></span>
-                <span>Mavjud emas: {apiStats.ended_products}</span>
+                <span>Mavjud emas: {endedCount}</span>
               </div>
             </div>
           </div>

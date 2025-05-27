@@ -1,10 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import "../styles/DashboardPage.css";
 
 const ProfileSection = ({ user }) => {
+  // Always call useOutletContext at the top level
+  const outletContext = useOutletContext();
+  const theme =
+    outletContext?.theme ?? (localStorage.getItem("theme") || "dark");
+  const setTheme = outletContext?.setTheme;
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+  // Only use localTheme if setTheme is not available
+  const [localTheme, setLocalTheme] = useState(
+    localStorage.getItem("theme") || "dark"
+  );
   const profileMenuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -43,15 +52,30 @@ const ProfileSection = ({ user }) => {
   const handleEditProfile = () => navigate("/profile/edit");
   const handleChangeLanguage = () => {};
 
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    document.documentElement.classList.toggle(
-      "light-theme",
-      newTheme === "light"
-    );
-    localStorage.setItem("theme", newTheme);
+  const handleThemeToggle = () => {
+    if (setTheme) {
+      setTheme(theme === "dark" ? "light" : "dark");
+    } else {
+      const newTheme = localTheme === "dark" ? "light" : "dark";
+      setLocalTheme(newTheme);
+      document.documentElement.classList.toggle(
+        "light-theme",
+        newTheme === "light"
+      );
+      localStorage.setItem("theme", newTheme);
+    }
   };
+
+  // If using localTheme, update DOM/class when it changes
+  useEffect(() => {
+    if (!setTheme) {
+      document.documentElement.classList.toggle(
+        "light-theme",
+        localTheme === "light"
+      );
+      localStorage.setItem("theme", localTheme);
+    }
+  }, [localTheme, setTheme]);
 
   return (
     <div className="profile-section" ref={profileMenuRef}>
@@ -82,8 +106,8 @@ const ProfileSection = ({ user }) => {
             <label className="switch">
               <input
                 type="checkbox"
-                checked={theme === "light"}
-                onChange={toggleTheme}
+                checked={setTheme ? theme === "light" : localTheme === "light"}
+                onChange={handleThemeToggle}
               />
               <span className="slider"></span>
             </label>
