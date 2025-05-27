@@ -250,6 +250,16 @@ body {
   flex: 1;
 }
 
+.content-wrapper:not(:has(.right-column)) {
+  display: block !important;
+  grid-template-columns: none !important;
+}
+
+.content-wrapper.no-right-column {
+  display: block !important;
+  grid-template-columns: none !important;
+}
+
 @media (max-width: 1200px) {
   .content-wrapper {
     grid-template-columns: 1fr;
@@ -385,7 +395,13 @@ body {
 }
 
 .profile-dropdown button:hover {
-  background-color: var(--color-hover);
+  background-color: #23263a; /* dark for dark theme */
+  color: var(--color-text-primary);
+}
+
+.light-theme .profile-dropdown button:hover {
+  background-color: #f2f2f2; /* very light grey for light theme */
+  color: var(--color-text-primary);
 }
 
 /* THEME TOGGLE SWITCH */
@@ -825,4 +841,10 @@ table td {
     padding: 8px;
     font-size: 12px;
   }
+}
+
+/* Only override white text in carousel cards for light theme */
+.light-theme .card h3,
+.light-theme .card p {
+  color: inherit !important;
 }

@@ -3,8 +3,10 @@ import LandingPage from "./pages/Landingpage.jsx";
 import RegistrationPage from "./pages/RegistrationPage.jsx";
 import "./styles/global.css";
 import PlanPage from "./pages/PlanPage.jsx";
-import Dashboardpage from "./pages/DashboardPage.jsx";
+import DashboardLayout from "./components/DashboardLayout.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
+import Dashboardpage from "./pages/DashboardPage.jsx";
+import ProductsPage from "./pages/ProductsPage.jsx";
 
 function App() {
   return (
@@ -15,13 +17,17 @@ function App() {
         <Route path="/register" element={<RegistrationPage />} />
         <Route path="/plan" element={<PlanPage />} />
         <Route
-          path="/dashboard"
+          path="/"
           element={
             <PrivateRoute>
-              <Dashboardpage />
+              <DashboardLayout />
             </PrivateRoute>
           }
-        />
+        >
+          <Route path="dashboard" element={<Dashboardpage />} />
+          <Route path="mahsulotlar" element={<ProductsPage />} />
+          {/* Add other dashboard-related routes here */}
+        </Route>
       </Routes>
     </Router>
   );

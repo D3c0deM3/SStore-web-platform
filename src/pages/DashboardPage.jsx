@@ -13,6 +13,7 @@ import {
   CategoryScale,
 } from "chart.js";
 import "../styles/DashboardPage.css";
+import ProfileSection from "../components/ProfileSection";
 
 ChartJS.register(
   LineElement,
@@ -28,6 +29,7 @@ ChartJS.register(
 const DashboardPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  // const { setTheme } = useOutletContext(); // Only use setTheme
   const [dashboardData, setDashboardData] = useState(
     location.state?.dashboardData || null
   );
@@ -46,8 +48,7 @@ const DashboardPage = () => {
   const [current_months, setMonth] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
-  // Theme & Profile Menu State
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+  // Profile Menu State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -111,12 +112,6 @@ const DashboardPage = () => {
 
   const apiBaseUrl =
     process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
-
-  // Apply theme class to <html> and persist
-  useEffect(() => {
-    document.documentElement.classList.toggle("light-theme", theme === "light");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
 
   // Close profile menu on outside click
   useEffect(() => {
@@ -600,278 +595,163 @@ const DashboardPage = () => {
     }
   }, [profits, current_months]);
 
-  const toggleTheme = () =>
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-  const handleEditProfile = () => navigate("/profile/edit");
-  const handleChangeLanguage = () => {
-    /* your language-change logic here */
-  };
-
-  const getPlanIconClass = (planType) => {
-    if (!planType) return "";
-    const planTypeLower = planType.toLowerCase();
-    if (planTypeLower.includes("basic")) return "basic";
-    if (planTypeLower.includes("pro")) return "pro";
-    if (planTypeLower.includes("vip")) return "vip";
-    return "basic"; // Default to basic if unknown
-  };
-
   if (loading) return <div className="loading">Loading dashboard...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!dashboardData || dashboardData.length === 0)
     return <div className="no-data">No data yet! Add your first product.</div>;
 
   return (
-    <div className={`dashboard ${theme === "light" ? "light-theme" : ""}`}>
-      <aside className="sidebar">
-        <div className="logo" />
-        <span className="logo_underline"></span>
-        <nav className="menu">
-          <p className="sidebar-menu">Menu</p>
-          <ul>
-            <li
-              className={location.pathname === "/dashboard" ? "active" : ""}
-              onClick={() => navigate("/dashboard")}
-            >
-              <span className="icon home-icon" />
-              Asosiy sahifa
-            </li>
-            <li
-              className={location.pathname === "/hisobotlar" ? "active" : ""}
-              onClick={() => navigate("/hisobotlar")}
-            >
-              <span className="icon history-icon" />
-              Hisobotlar
-            </li>
-            <li
-              className={location.pathname === "/mahsulotlar" ? "active" : ""}
-              onClick={() => navigate("/mahsulotlar")}
-            >
-              <span className="icon products-icon" />
-              Mahsulotlar
-            </li>
-            <li
-              className={location.pathname === "/kalkulyator" ? "active" : ""}
-              onClick={() => navigate("/kalkulyator")}
-            >
-              <span className="icon calculator-icon" />
-              Kalkulyator
-            </li>
-            <li
-              className={location.pathname === "/ai-maslahat" ? "active" : ""}
-              onClick={() => navigate("/ai-maslahat")}
-            >
-              <span className="icon ai-icon" />
-              AI maslahat
-            </li>
-          </ul>
-        </nav>
-        <div className="vip-plan">
-          {user?.plan && (
-            <span className={`plan-icon ${getPlanIconClass(user.plan)}`} />
-          )}
-          {user?.plan} PLAN
+    <>
+      <main className="main-content">
+        <div className="search-container">
+          <span className="search-icon" />
+          <input type="text" placeholder="Qidiruv..." />
         </div>
-      </aside>
 
-      <div className="content-wrapper">
-        <main className="main-content">
-          <div className="search-container">
-            <span className="search-icon" />
-            <input type="text" placeholder="Qidiruv..." />
+        {/* Updated Stats Cards Section with infinite animation */}
+        <section className="stats-cards">
+          <div className="stats-cards-inner">
+            {/* Original set of cards */}
+            <div className="card card-1">
+              <h3>Mahsulotlar</h3>
+              <p>{quantity}</p>
+            </div>
+            <div className="card card-2">
+              <h3>Sof daromad</h3>
+              <p>{totalRevenue.toLocaleString()} UZS</p>
+            </div>
+            <div className="card card-3">
+              <h3>Daromad</h3>
+              <p>{income.toLocaleString()} UZS</p>
+            </div>
+            <div className="card card-4">
+              <h3>Xarajat</h3>
+              <p>{expense.toLocaleString()} UZS</p>
+            </div>
+            <div className="card card-5">
+              <h3>Sotilgan tovarlar</h3>
+              <p>{soldProducts.toLocaleString()}</p>
+            </div>
+            <div className="card card-6">
+              <h3>Kelgan tovarlar</h3>
+              <p>{boughtProducts.toLocaleString()}</p>
+            </div>
+
+            {/* Duplicate set for seamless looping */}
+            <div className="card card-1">
+              <h3>Mahsulotlar</h3>
+              <p>{quantity}</p>
+            </div>
+            <div className="card card-2">
+              <h3>Sof daromad</h3>
+              <p>{totalRevenue.toLocaleString()} UZS</p>
+            </div>
+            <div className="card card-3">
+              <h3>Daromad</h3>
+              <p>{income.toLocaleString()} UZS</p>
+            </div>
+            <div className="card card-4">
+              <h3>Xarajat</h3>
+              <p>{expense.toLocaleString()} UZS</p>
+            </div>
+            <div className="card card-5">
+              <h3>Sotilgan tovarlar</h3>
+              <p>{soldProducts.toLocaleString()}</p>
+            </div>
+            <div className="card card-6">
+              <h3>Kelgan tovarlar</h3>
+              <p>{boughtProducts.toLocaleString()}</p>
+            </div>
           </div>
+        </section>
 
-          {/* Updated Stats Cards Section with infinite animation */}
-          <section className="stats-cards">
-            <div className="stats-cards-inner">
-              {/* Original set of cards */}
-              <div className="card card-1">
-                <h3>Mahsulotlar</h3>
-                <p>{quantity}</p>
-              </div>
-              <div className="card card-2">
-                <h3>Sof daromad</h3>
-                <p>{totalRevenue.toLocaleString()} UZS</p>
-              </div>
-              <div className="card card-3">
-                <h3>Daromad</h3>
-                <p>{income.toLocaleString()} UZS</p>
-              </div>
-              <div className="card card-4">
-                <h3>Xarajat</h3>
-                <p>{expense.toLocaleString()} UZS</p>
-              </div>
-              <div className="card card-5">
-                <h3>Sotilgan tovarlar</h3>
-                <p>{soldProducts.toLocaleString()}</p>
-              </div>
-              <div className="card card-6">
-                <h3>Kelgan tovarlar</h3>
-                <p>{boughtProducts.toLocaleString()}</p>
-              </div>
-
-              {/* Duplicate set for seamless looping */}
-              <div className="card card-1">
-                <h3>Mahsulotlar</h3>
-                <p>{quantity}</p>
-              </div>
-              <div className="card card-2">
-                <h3>Sof daromad</h3>
-                <p>{totalRevenue.toLocaleString()} UZS</p>
-              </div>
-              <div className="card card-3">
-                <h3>Daromad</h3>
-                <p>{income.toLocaleString()} UZS</p>
-              </div>
-              <div className="card card-4">
-                <h3>Xarajat</h3>
-                <p>{expense.toLocaleString()} UZS</p>
-              </div>
-              <div className="card card-5">
-                <h3>Sotilgan tovarlar</h3>
-                <p>{soldProducts.toLocaleString()}</p>
-              </div>
-              <div className="card card-6">
-                <h3>Kelgan tovarlar</h3>
-                <p>{boughtProducts.toLocaleString()}</p>
-              </div>
+        <section className="chart-section">
+          <div className="graph-head-content">
+            <div className="graph-headline-left">
+              <span className="graph-icon" />
+              <h3>Oylik Sof Foyda</h3>
             </div>
-          </section>
-
-          <section className="chart-section">
-            <div className="graph-head-content">
-              <div className="graph-headline-left">
-                <span className="graph-icon" />
-                <h3>Oylik Sof Foyda</h3>
-              </div>
-              <span className="more-button">batafsil →</span>
-            </div>
-            <div className="chart-wrapper">
-              {chartData ? (
-                <Line data={chartData} options={chartOptions} />
-              ) : (
-                <p>Loading chart...</p>
-              )}
-            </div>
-          </section>
-
-          <section className="top-selling-section">
-            <div className="table-container">
-              <h3>Top Selling products</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Sales</th>
-                    <th>Amount</th>
-                    <th>Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productsByPrice.length > 0 ? (
-                    productsByPrice.map((product) => (
-                      <tr key={product.id}>
-                        <td>{product.name}</td>
-                        <td>
-                          {(product.total_subtracted || 0).toLocaleString()}{" "}
-                          {product.quantity_type}
-                        </td>
-                        <td>
-                          {product.quantity.toLocaleString()}{" "}
-                          {product.quantity_type}
-                        </td>
-                        <td>{product.total_sold_price.toLocaleString()} UZS</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center">
-                        No sales data available.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </main>
-
-        <div className="right-column">
-          <div className="profile-section" ref={profileMenuRef}>
-            <div
-              className="profile-container"
-              onClick={() => setShowProfileMenu((prev) => !prev)}
-            >
-              {user?.profileImage ? (
-                <div
-                  className="profile-pic"
-                  style={{
-                    backgroundImage: `url(https://res.cloudinary.com/bnf404/${user.profileImage})`,
-                  }}
-                />
-              ) : (
-                <div className="profile-pic default" />
-              )}
-              <div>
-                <span>{user?.name || "User Name"}</span>
-                <span>{user?.phone || "+998 97 201 13 17"}</span>
-              </div>
-              <span className="profile_arrow_icon" />
-            </div>
-
-            {showProfileMenu && (
-              <div className="profile-dropdown">
-                <button onClick={handleEditProfile}>Edit Profile</button>
-                <div className="theme-toggle">
-                  <span>Light Theme</span>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={theme === "light"}
-                      onChange={toggleTheme}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-                <button onClick={handleChangeLanguage}>Change Language</button>
-                <button onClick={handleLogout}>Log Out</button>
-              </div>
+            <span className="more-button">batafsil →</span>
+          </div>
+          <div className="chart-wrapper">
+            {chartData ? (
+              <Line data={chartData} options={chartOptions} />
+            ) : (
+              <p>Loading chart...</p>
             )}
           </div>
+        </section>
 
-          <div className="table-container products-table">
+        <section className="top-selling-section">
+          <div className="table-container">
+            <h3>Top Selling products</h3>
             <table>
               <thead>
                 <tr>
-                  <th>Mahsulot</th>
-                  <th>Miqdori</th>
+                  <th>Product</th>
+                  <th>Sales</th>
+                  <th>Amount</th>
+                  <th>Price</th>
                 </tr>
               </thead>
               <tbody>
-                {products.length > 0 ? (
-                  products.map((product) => (
+                {productsByPrice.length > 0 ? (
+                  productsByPrice.map((product) => (
                     <tr key={product.id}>
                       <td>{product.name}</td>
-                      <td>{product.quantity}</td>
+                      <td>
+                        {(product.total_subtracted || 0).toLocaleString()}{" "}
+                        {product.quantity_type}
+                      </td>
+                      <td>
+                        {product.quantity.toLocaleString()}{" "}
+                        {product.quantity_type}
+                      </td>
+                      <td>{product.total_sold_price.toLocaleString()} UZS</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="2" className="text-center">
-                      No products available.
+                    <td colSpan="4" className="text-center">
+                      No sales data available.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+        </section>
+      </main>
+      <div className="right-column">
+        <ProfileSection user={user} />
+        <div className="table-container products-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Mahsulot</th>
+                <th>Miqdori</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.length > 0 ? (
+                products.map((product) => (
+                  <tr key={product.id}>
+                    <td>{product.name}</td>
+                    <td>{product.quantity}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="2" className="text-center">
+                    No products available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
