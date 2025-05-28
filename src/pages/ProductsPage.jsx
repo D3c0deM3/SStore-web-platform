@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ProductsPage.css";
 import ProfileSection from "../components/ProfileSection";
@@ -10,6 +10,16 @@ const ProductsPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState({});
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [headerDropdownPosition, setHeaderDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+  const menuRef = useRef(null);
+  const headerMenuRef = useRef(null);
 
   const apiBaseUrl =
     process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
@@ -57,6 +67,22 @@ const ProductsPage = () => {
     }
   }, [navigate, apiBaseUrl]);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && menuRef.current.contains(event.target)) return;
+      if (headerMenuRef.current && headerMenuRef.current.contains(event.target))
+        return;
+      setMenuOpenId(null);
+      setHeaderMenuOpen(false);
+    }
+    if (menuOpenId !== null || headerMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside, true);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside, true);
+    };
+  }, [menuOpenId, headerMenuOpen]);
+
   const handleAddProduct = () => {
     console.log("Add product clicked");
     // Add navigation or modal logic here if needed
@@ -66,17 +92,6 @@ const ProductsPage = () => {
     if (quantity <= 0) return { text: "Mavjud emas", class: "red" };
     if (quantity <= 50) return { text: "Kam qolgan", class: "yellow" };
     return { text: "Bor", class: "green" };
-  };
-
-  const getCategoryName = (categoryId) => {
-    // You can expand this mapping based on your actual categories
-    const categories = {
-      1: "Yegulik",
-      2: "Ichimlik",
-      3: "Sut mahsulotlari",
-      4: "Go'sht mahsulotlari",
-    };
-    return categories[categoryId] || "Boshqa";
   };
 
   // Calculate mutually exclusive product status counts for progress bar and legend
@@ -95,6 +110,48 @@ const ProductsPage = () => {
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleOptionsClick = (event, productId) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY;
+    let left = rect.right + window.scrollX - 140;
+    const dropdownHeight = 90;
+    if (window.innerHeight - rect.bottom < dropdownHeight) {
+      top = rect.top + window.scrollY - dropdownHeight;
+    }
+    setDropdownPosition({ top, left });
+    setMenuOpenId((prev) => (prev === productId ? null : productId));
+  };
+
+  const handleHeaderOptionsClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY;
+    let left = rect.right + window.scrollX - 140;
+    const dropdownHeight = 90;
+    if (window.innerHeight - rect.bottom < dropdownHeight) {
+      top = rect.top + window.scrollY - dropdownHeight;
+    }
+    setHeaderDropdownPosition({ top, left });
+    setHeaderMenuOpen((prev) => !prev);
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(filteredProducts.map((p) => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    );
+  };
 
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
@@ -170,16 +227,87 @@ const ProductsPage = () => {
               <thead>
                 <tr>
                   <th>
-                    <input type="checkbox" className="select-all" />
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox select-all"
+                      checked={
+                        filteredProducts.length > 0 &&
+                        selectedIds.length === filteredProducts.length
+                      }
+                      onChange={handleSelectAll}
+                      indeterminate={
+                        selectedIds.length > 0 &&
+                        selectedIds.length < filteredProducts.length
+                          ? "true"
+                          : undefined
+                      }
+                    />
                   </th>
                   <th>Mahsulot nomi</th>
                   <th>Kategoriya</th>
                   <th>Qoldiq</th>
                   <th>
-                    Status <span className="sort-icon">⌄</span>
+                    Status <span className="sort-icon"></span>
                   </th>
                   <th>Narx</th>
-                  <th></th>
+                  <th>
+                    <button
+                      className={`options-btn${headerMenuOpen ? " open" : ""}`}
+                      onClick={handleHeaderOptionsClick}
+                      aria-label="Table Options"
+                      style={{
+                        background: headerMenuOpen
+                          ? "var(--color-hover, #f2f2f2)"
+                          : "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        borderRadius: 6,
+                        transition: "background 0.2s",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 22,
+                          lineHeight: 1,
+                          color: "var(--color-text-primary)",
+                        }}
+                      >
+                        ⋯
+                      </span>
+                    </button>
+                    {headerMenuOpen && (
+                      <div
+                        className="profile-dropdown product-dropdown"
+                        ref={headerMenuRef}
+                        style={{
+                          position: "fixed",
+                          top: headerDropdownPosition.top,
+                          left: headerDropdownPosition.left,
+                          minWidth: 140,
+                        }}
+                      >
+                        <button
+                          onClick={() => {
+                            // handle bulk edit logic
+                            setHeaderMenuOpen(false);
+                          }}
+                        >
+                          Bulk Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            // handle bulk delete logic
+                            setHeaderMenuOpen(false);
+                          }}
+                        >
+                          Bulk Delete
+                        </button>
+                      </div>
+                    )}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -188,11 +316,16 @@ const ProductsPage = () => {
                   return (
                     <tr key={product.id}>
                       <td>
-                        <input type="checkbox" />
+                        <input
+                          type="checkbox"
+                          className="custom-checkbox"
+                          checked={selectedIds.includes(product.id)}
+                          onChange={() => handleSelectRow(product.id)}
+                        />
                       </td>
                       <td className="product-name">{product.name}</td>
                       <td className="category">
-                        {getCategoryName(product.category_id)}
+                        {product.category_name || "Boshqa"}
                       </td>
                       <td className="quantity">{product.quantity}</td>
                       <td>
@@ -206,8 +339,64 @@ const ProductsPage = () => {
                         ).toLocaleString()}{" "}
                         UZS
                       </td>
-                      <td>
-                        <button className="options-btn">⋯</button>
+                      <td style={{ position: "relative" }}>
+                        <button
+                          className={`options-btn${
+                            menuOpenId === product.id ? " open" : ""
+                          }`}
+                          onClick={(e) => handleOptionsClick(e, product.id)}
+                          aria-label="Options"
+                          style={{
+                            background:
+                              menuOpenId === product.id
+                                ? "var(--color-hover, #f2f2f2)"
+                                : "none",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            borderRadius: 6,
+                            transition: "background 0.2s",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 22,
+                              lineHeight: 1,
+                              color: "var(--color-text-primary)",
+                            }}
+                          >
+                            ⋯
+                          </span>
+                        </button>
+                        {menuOpenId === product.id && (
+                          <div
+                            className="profile-dropdown product-dropdown"
+                            ref={menuRef}
+                            style={{
+                              position: "fixed",
+                              top: dropdownPosition.top,
+                              left: dropdownPosition.left,
+                              minWidth: 140,
+                            }}
+                          >
+                            <button
+                              onClick={() => {
+                                /* handle edit logic */ setMenuOpenId(null);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                /* handle delete logic */ setMenuOpenId(null);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

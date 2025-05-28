@@ -589,9 +589,7 @@ const DashboardPage = () => {
         hover: { mode: "nearest", intersect: true },
       });
 
-      console.log("Profits:", profits);
-      console.log("Data Points:", dataPoints);
-      console.log("Labels:", labels);
+      // Remove debugging logs
     }
   }, [profits, current_months]);
 
