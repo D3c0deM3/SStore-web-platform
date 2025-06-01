@@ -2,6 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ProductsPage.css";
 import ProfileSection from "../components/ProfileSection";
+import NotificationPopup from "../components/NotificationPopup";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
+import BulkDeleteModal from "../components/BulkDeleteModal";
+import EditProductModal from "../components/EditProductModal";
+import AddProductDrawer from "../components/AddProductDrawer";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
@@ -34,6 +39,17 @@ const ProductsPage = () => {
   });
   const [categories, setCategories] = useState([]);
   const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [addProductForm, setAddProductForm] = useState({
+    category_id: categories.length > 0 ? categories[0].id : "",
+    name: "",
+    quantity: "",
+    quantity_type: "numeric",
+    price_per_quantity: "",
+    status: "available",
+  });
+  const [addProductLoading, setAddProductLoading] = useState(false);
+  const [addProductError, setAddProductError] = useState("");
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -99,9 +115,47 @@ const ProductsPage = () => {
     };
   }, [menuOpenId, headerMenuOpen]);
 
-  const handleAddProduct = () => {
-    console.log("Add product clicked");
-    // Add navigation or modal logic here if needed
+  const handleAddProduct = () => setShowAddProduct(true);
+
+  const handleCloseAddProduct = () => {
+    setShowAddProduct(false);
+    setAddProductForm({
+      category_id: categories.length > 0 ? categories[0].id : "",
+      name: "",
+      quantity: "",
+      quantity_type: "numeric",
+      price_per_quantity: "",
+      status: "available",
+    });
+    setAddProductError("");
+  };
+
+  const handleAddProductFieldChange = (field, value) => {
+    setAddProductForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveAddProduct = async () => {
+    setAddProductLoading(true);
+    setAddProductError("");
+    try {
+      // Replace with your API call
+      const response = await fetch("/api/products/create/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...addProductForm,
+          quantity: Number(addProductForm.quantity),
+          price_per_quantity: addProductForm.price_per_quantity,
+        }),
+      });
+      if (!response.ok) throw new Error("Mahsulotni yaratib bolmadi");
+      setShowAddProduct(false);
+      // Optionally refresh products list here
+    } catch (e) {
+      setAddProductError(e.message || "Xatolik yuz berdi");
+    } finally {
+      setAddProductLoading(false);
+    }
   };
 
   const getStatusInfo = (quantity) => {
@@ -415,691 +469,53 @@ const ProductsPage = () => {
     setDeleteLoading(false);
   };
 
-  // ...existing code...
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
     <div className="products-page">
       {/* Notification */}
-      {notification.show && (
-        <div className={`notification-icon-popup ${notification.type}`}>
-          {notification.type === "success" ? (
-            <span className="tick-popup-icon">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="22"
-                  fill="#48bb78"
-                  fillOpacity="0.18"
-                />
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="18"
-                  fill="#48bb78"
-                  fillOpacity="0.32"
-                />
-                <path
-                  className="tick-path"
-                  d="M16 25L22 31L33 19"
-                  stroke="#48bb78"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-          ) : (
-            <span className="x-popup-icon">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="22"
-                  fill="#f56565"
-                  fillOpacity="0.18"
-                />
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="18"
-                  fill="#f56565"
-                  fillOpacity="0.32"
-                />
-                <path
-                  className="x-path"
-                  d="M18 18L30 30M30 18L18 30"
-                  stroke="#f56565"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-          )}
-        </div>
-      )}
+      <NotificationPopup show={notification.show} type={notification.type}>
+        {/* No children, just icon */}
+      </NotificationPopup>
       {/* Confirmation Modal */}
-      {confirmDeleteId !== null && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.32)",
-            zIndex: 1200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            className="modal"
-            style={{
-              background: "var(--color-bg-secondary)",
-              borderRadius: 16,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-              padding: "32px 28px",
-              minWidth: 320,
-              maxWidth: "90vw",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ fontSize: 18, marginBottom: 18 }}>
-              Haqiqatan ham{" "}
-              <b>{products.find((p) => p.id === confirmDeleteId)?.name}</b>{" "}
-              mahsulotini o‘chirmoqchimisiz?
-            </p>
-            <div
-              className="modal-actions"
-              style={{ display: "flex", gap: 16, justifyContent: "center" }}
-            >
-              <button
-                className="confirm-btn"
-                style={{
-                  background: "#e53e3e",
-                  color: "#fff",
-                  padding: "8px 20px",
-                  borderRadius: 8,
-                  border: "none",
-                  fontWeight: 600,
-                  cursor: deleteLoading ? "not-allowed" : "pointer",
-                  opacity: deleteLoading ? 0.7 : 1,
-                  position: "relative",
-                  transition: "background 0.18s, opacity 0.18s",
-                }}
-                onClick={() => handleDeleteProduct(confirmDeleteId)}
-                disabled={deleteLoading}
-              >
-                {deleteLoading ? (
-                  <span
-                    className="btn-spinner"
-                    style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
-                      width: 20,
-                      height: 20,
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 50 50">
-                      <circle
-                        cx="25"
-                        cy="25"
-                        r="20"
-                        fill="none"
-                        stroke="#fff"
-                        strokeWidth="5"
-                        strokeDasharray="31.4 31.4"
-                        strokeLinecap="round"
-                      >
-                        <animateTransform
-                          attributeName="transform"
-                          type="rotate"
-                          from="0 25 25"
-                          to="360 25 25"
-                          dur="0.8s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
-                    </svg>
-                  </span>
-                ) : (
-                  "Ha, o‘chirish"
-                )}
-              </button>
-              <button
-                className="cancel-btn"
-                style={{
-                  background: "#f2f2f2",
-                  color: "#222",
-                  padding: "8px 20px",
-                  borderRadius: 8,
-                  border: "none",
-                  fontWeight: 500,
-                  cursor: deleteLoading ? "not-allowed" : "pointer",
-                  opacity: deleteLoading ? 0.7 : 1,
-                  transition: "background 0.18s, opacity 0.18s",
-                }}
-                onClick={() => !deleteLoading && setConfirmDeleteId(null)}
-                disabled={deleteLoading}
-              >
-                Bekor qilish
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        show={confirmDeleteId !== null}
+        product={products.find((p) => p.id === confirmDeleteId)}
+        onConfirm={() => handleDeleteProduct(confirmDeleteId)}
+        onCancel={() => !deleteLoading && setConfirmDeleteId(null)}
+        loading={deleteLoading}
+      />
       {/* Edit Product Modal */}
-      {editModal.show && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.32)",
-            zIndex: 1300,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            className="modal edit-modal"
-            style={{
-              background: "var(--color-bg-secondary)",
-              borderRadius: 20,
-              boxShadow: "0 12px 48px rgba(0,0,0,0.22)",
-              padding: "48px 40px 36px 40px",
-              minWidth: 420,
-              maxWidth: "98vw",
-              width: 480,
-              textAlign: "center",
-              fontFamily: "Inter, Segoe UI, Arial, sans-serif",
-              position: "relative",
-              transition: "box-shadow 0.2s",
-              color: "#fff", // Make all text white by default
-            }}
-          >
-            <h2
-              style={{
-                fontSize: 26,
-                fontWeight: 700,
-                marginBottom: 32,
-                color: "var(--modal-label-color, #fff)",
-              }}
-            >
-              Mahsulotni tahrirlash
-            </h2>
-            {editModal.loading && (
-              <div
-                className="loading-spinner"
-                style={{ marginBottom: 18, fontSize: 18, color: "#fff" }}
-              >
-                Loading...
-              </div>
-            )}
-            {editModal.error && (
-              <div
-                className="error-message"
-                style={{
-                  marginBottom: 18,
-                  color: "#ffb3b3",
-                  fontWeight: 500,
-                  fontSize: 16,
-                }}
-              >
-                {editModal.error}
-              </div>
-            )}
-            <div
-              className="edit-form"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 22,
-                marginBottom: 18,
-              }}
-            >
-              <div className="form-group" style={{ textAlign: "left" }}>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    marginBottom: 6,
-                    display: "block",
-                    color: "var(--modal-label-color, #fff)",
-                  }}
-                >
-                  Mahsulot nomi
-                </label>
-                <input
-                  type="text"
-                  value={editModal.form?.name || ""}
-                  onChange={(e) =>
-                    handleEditFieldChange("name", e.target.value)
-                  }
-                  disabled={editModal.loading}
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: 10,
-                    border: "1.5px solid #e0e0e0",
-                    fontSize: 16,
-                    background: "var(--modal-input-bg, #fff)",
-                    color: "#222",
-                    outline: "none",
-                    transition: "border 0.18s",
-                    marginTop: 2,
-                  }}
-                />
-              </div>
-              <div className="form-group" style={{ textAlign: "left" }}>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    marginBottom: 6,
-                    display: "block",
-                    color: "var(--modal-label-color, #fff)",
-                  }}
-                >
-                  Kategoriya
-                </label>
-                <select
-                  value={
-                    categories.some(
-                      (cat) =>
-                        String(cat.id) === String(editModal.form?.category_id)
-                    )
-                      ? String(editModal.form?.category_id)
-                      : categories.length > 0
-                      ? String(categories[0].id)
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const selectedCategory = categories.find(
-                      (c) => String(c.id) === selectedId
-                    );
-                    handleEditFieldChange("category_id", selectedId);
-                    if (selectedCategory) {
-                      handleEditFieldChange(
-                        "category_name",
-                        selectedCategory.name
-                      );
-                    }
-                  }}
-                  disabled={editModal.loading || categories.length === 0}
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: 10,
-                    border: "1.5px solid #e0e0e0",
-                    fontSize: 16,
-                    background: "var(--modal-input-bg, #fff)",
-                    color: "#222",
-                    outline: "none",
-                    transition: "border 0.18s",
-                    marginTop: 2,
-                    appearance: "none",
-                  }}
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={String(cat.id)}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group" style={{ textAlign: "left" }}>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    marginBottom: 6,
-                    display: "block",
-                    color: "var(--modal-label-color, #fff)",
-                  }}
-                >
-                  Qoldiq
-                </label>
-                <input
-                  type="number"
-                  value={editModal.form?.quantity || ""}
-                  onChange={(e) =>
-                    handleEditFieldChange("quantity", e.target.value)
-                  }
-                  disabled={editModal.loading}
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: 10,
-                    border: "1.5px solid #e0e0e0",
-                    fontSize: 16,
-                    background: "var(--modal-input-bg, #fff)",
-                    color: "#222",
-                    outline: "none",
-                    transition: "border 0.18s",
-                    marginTop: 2,
-                    MozAppearance: "textfield",
-                  }}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  onWheel={(e) => e.target.blur()}
-                  onKeyDown={(e) =>
-                    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
-                    e.preventDefault()
-                  }
-                />
-              </div>
-              <div className="form-group" style={{ textAlign: "left" }}>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    marginBottom: 6,
-                    display: "block",
-                    color: "var(--modal-label-color, #fff)",
-                  }}
-                >
-                  Narx
-                </label>
-                <input
-                  type="number"
-                  value={editModal.form?.price_per_quantity || ""}
-                  onChange={(e) =>
-                    handleEditFieldChange("price_per_quantity", e.target.value)
-                  }
-                  disabled={editModal.loading}
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: 10,
-                    border: "1.5px solid #e0e0e0",
-                    fontSize: 16,
-                    background: "var(--modal-input-bg, #fff)",
-                    color: "#222",
-                    outline: "none",
-                    transition: "border 0.18s",
-                    marginTop: 2,
-                    MozAppearance: "textfield",
-                  }}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  onWheel={(e) => e.target.blur()}
-                  onKeyDown={(e) =>
-                    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
-                    e.preventDefault()
-                  }
-                />
-              </div>
-            </div>
-            <div
-              className="modal-actions"
-              style={{
-                display: "flex",
-                gap: 18,
-                justifyContent: "center",
-                marginTop: 18,
-              }}
-            >
-              <button
-                className="save-btn"
-                style={{
-                  background: "#4caf50",
-                  color: "#fff",
-                  padding: "12px 32px",
-                  borderRadius: 10,
-                  border: "none",
-                  fontWeight: 700,
-                  fontSize: 16,
-                  cursor: editModal.loading ? "not-allowed" : "pointer",
-                  opacity: editModal.loading ? 0.7 : 1,
-                  position: "relative",
-                  transition: "background 0.18s, opacity 0.18s",
-                  boxShadow: "0 2px 8px rgba(76,175,80,0.08)",
-                }}
-                onClick={handleSaveEdit}
-                disabled={editModal.loading}
-              >
-                {editModal.loading ? (
-                  <span
-                    className="btn-spinner"
-                    style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
-                      width: 20,
-                      height: 20,
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 50 50">
-                      <circle
-                        cx="25"
-                        cy="25"
-                        r="20"
-                        fill="none"
-                        stroke="#fff"
-                        strokeWidth="5"
-                        strokeDasharray="31.4 31.4"
-                        strokeLinecap="round"
-                      >
-                        <animateTransform
-                          attributeName="transform"
-                          type="rotate"
-                          from="0 25 25"
-                          to="360 25 25"
-                          dur="0.8s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
-                    </svg>
-                  </span>
-                ) : (
-                  "Saqlash"
-                )}
-              </button>
-              <button
-                className="cancel-btn"
-                style={{
-                  background: "#f2f2f2",
-                  color: "#222",
-                  padding: "12px 32px",
-                  borderRadius: 10,
-                  border: "none",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: editModal.loading ? "not-allowed" : "pointer",
-                  opacity: editModal.loading ? 0.7 : 1,
-                  transition: "background 0.18s, opacity 0.18s",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                }}
-                onClick={handleCancelEdit}
-                disabled={editModal.loading}
-              >
-                Bekor qilish
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <EditProductModal
+        show={editModal.show}
+        loading={editModal.loading}
+        error={editModal.error}
+        form={editModal.form}
+        categories={categories}
+        onFieldChange={handleEditFieldChange}
+        onSave={handleSaveEdit}
+        onCancel={handleCancelEdit}
+      />
       {bulkDeleteModal && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.32)",
-            zIndex: 1200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            className="modal"
-            style={{
-              background: "var(--color-bg-secondary)",
-              borderRadius: 16,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-              padding: "32px 28px",
-              minWidth: 320,
-              maxWidth: "90vw",
-              textAlign: "center",
-            }}
-          >
-            {selectedIds.length === 0 ? (
-              <>
-                <p
-                  style={{
-                    fontSize: 18,
-                    marginBottom: 18,
-                    color: "#e53e3e",
-                    fontWeight: 600,
-                  }}
-                >
-                  O'chirish uchun hech qanday mahsulot tanlanmadi.
-                </p>
-                <div
-                  className="modal-actions"
-                  style={{ display: "flex", gap: 16, justifyContent: "center" }}
-                >
-                  <button
-                    className="ok-btn"
-                    style={{
-                      background: "#4caf50",
-                      color: "#fff",
-                      padding: "8px 20px",
-                      borderRadius: 8,
-                      border: "none",
-                      fontWeight: 700,
-                      fontSize: 16,
-                      cursor: deleteLoading ? "not-allowed" : "pointer",
-                      opacity: deleteLoading ? 0.7 : 1,
-                      transition: "background 0.18s, opacity 0.18s",
-                    }}
-                    onClick={() => setBulkDeleteModal(false)}
-                    disabled={deleteLoading}
-                  >
-                    OK
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: 18, marginBottom: 18 }}>
-                  {selectedIds.length === 1
-                    ? `Haqiqatan ham tanlangan bu mahsulotni o‘chirmoqchimisiz?`
-                    : `Haqiqatan ham tanlangan bu mahsulotlarni o‘chirmoqchimisiz?`}
-                  <br />
-                  <span
-                    style={{
-                      display: "block",
-                      marginTop: 10,
-                      color: "#ffb3b3",
-                      fontWeight: 500,
-                      fontSize: 15,
-                      textAlign: "left",
-                      maxHeight: 120,
-                      overflowY: "auto",
-                      whiteSpace: "pre-line",
-                    }}
-                  >
-                    {products
-                      .filter((p) => selectedIds.includes(p.id))
-                      .map((p) => `• ${p.name}`)
-                      .join("\n")}
-                  </span>
-                </p>
-                <div
-                  className="modal-actions"
-                  style={{ display: "flex", gap: 16, justifyContent: "center" }}
-                >
-                  <button
-                    className="confirm-btn"
-                    style={{
-                      background: "#e53e3e",
-                      color: "#fff",
-                      padding: "8px 20px",
-                      borderRadius: 8,
-                      border: "none",
-                      fontWeight: 600,
-                      cursor: deleteLoading ? "not-allowed" : "pointer",
-                      opacity: deleteLoading ? 0.7 : 1,
-                      position: "relative",
-                      transition: "background 0.18s, opacity 0.18s",
-                    }}
-                    onClick={confirmBulkDelete}
-                    disabled={deleteLoading}
-                  >
-                    {deleteLoading ? (
-                      <span
-                        className="btn-spinner"
-                        style={{
-                          display: "inline-block",
-                          verticalAlign: "middle",
-                          width: 20,
-                          height: 20,
-                        }}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 50 50">
-                          <circle
-                            cx="25"
-                            cy="25"
-                            r="20"
-                            fill="none"
-                            stroke="#fff"
-                            strokeWidth="5"
-                            strokeDasharray="31.4 31.4"
-                            strokeLinecap="round"
-                          >
-                            <animateTransform
-                              attributeName="transform"
-                              type="rotate"
-                              from="0 25 25"
-                              to="360 25 25"
-                              dur="0.8s"
-                              repeatCount="indefinite"
-                            />
-                          </circle>
-                        </svg>
-                      </span>
-                    ) : (
-                      "Ha, o‘chirish"
-                    )}
-                  </button>
-                  <button
-                    className="cancel-btn"
-                    style={{
-                      background: "#f2f2f2",
-                      color: "#222",
-                      padding: "8px 20px",
-                      borderRadius: 8,
-                      border: "none",
-                      fontWeight: 500,
-                      cursor: deleteLoading ? "not-allowed" : "pointer",
-                      opacity: deleteLoading ? 0.7 : 1,
-                      transition: "background 0.18s, opacity 0.18s",
-                    }}
-                    onClick={() => !deleteLoading && setBulkDeleteModal(false)}
-                    disabled={deleteLoading}
-                  >
-                    Bekor qilish
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <BulkDeleteModal
+          show={bulkDeleteModal}
+          selectedProducts={products.filter((p) => selectedIds.includes(p.id))}
+          onConfirm={confirmBulkDelete}
+          onCancel={() => setBulkDeleteModal(false)}
+          loading={deleteLoading}
+        />
       )}
+      {/* Add Product Side Card */}
+      <AddProductDrawer
+        show={showAddProduct}
+        onClose={handleCloseAddProduct}
+        form={addProductForm}
+        categories={categories}
+        onFieldChange={handleAddProductFieldChange}
+        onSave={handleSaveAddProduct}
+        loading={addProductLoading}
+        error={addProductError}
+      />
       <div className="content-wrapper no-right-column">
         <div className="main-content">
           <div className="header-section">
