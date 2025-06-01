@@ -235,6 +235,15 @@ const ProductsPage = () => {
         }
       };
       await fetchProducts();
+      // Clear the add product form fields
+      setAddProductForm({
+        category_id: categories.length > 0 ? categories[0].id : "",
+        name: "",
+        quantity: "",
+        quantity_type: "numeric",
+        price_per_quantity: "",
+        status: "available",
+      });
       setShowAddProduct(false);
     } catch (e) {
       console.error("Error while creating product:", e);

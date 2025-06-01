@@ -90,7 +90,7 @@ const AddProductDrawer = ({
               borderRadius: 8,
               border: "1.5px solid #e0e0e0",
               fontSize: 15,
-              background: "#fff",
+              background: "#f5f6fa",
               color: "#222",
               marginTop: 2,
             }}
@@ -123,7 +123,7 @@ const AddProductDrawer = ({
               borderRadius: 8,
               border: "1.5px solid #e0e0e0",
               fontSize: 15,
-              background: "#fff",
+              background: "#f5f6fa",
               color: "#222",
               marginTop: 2,
             }}
@@ -150,7 +150,7 @@ const AddProductDrawer = ({
               borderRadius: 8,
               border: "1.5px solid #e0e0e0",
               fontSize: 15,
-              background: "#fff",
+              background: "#f5f6fa",
               color: "#222",
               marginTop: 2,
             }}
@@ -181,7 +181,7 @@ const AddProductDrawer = ({
               borderRadius: 8,
               border: "1.5px solid #e0e0e0",
               fontSize: 15,
-              background: "#fff",
+              background: "#f5f6fa",
               color: "#222",
               marginTop: 2,
             }}
@@ -209,7 +209,7 @@ const AddProductDrawer = ({
               borderRadius: 8,
               border: "1.5px solid #e0e0e0",
               fontSize: 15,
-              background: "#fff",
+              background: "#f5f6fa",
               color: "#222",
               marginTop: 2,
             }}
