@@ -18,6 +18,13 @@ const ProductsPage = () => {
     top: 0,
     left: 0,
   });
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "",
+    message: "",
+  });
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -153,10 +160,225 @@ const ProductsPage = () => {
     );
   };
 
+  const handleDeleteProduct = async (productId) => {
+    if (deleteLoading) return;
+    setDeleteLoading(true);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setNotification({ show: true, type: "error" });
+      setDeleteLoading(false);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/api/products/delete/${productId}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.status === 200) {
+        setProducts((prev) => prev.filter((p) => p.id !== productId));
+        setNotification({ show: true, type: "success" });
+      } else {
+        setNotification({ show: true, type: "error" });
+      }
+    } catch (err) {
+      setNotification({ show: true, type: "error" });
+    }
+    setConfirmDeleteId(null);
+    setDeleteLoading(false);
+  };
+
+  // Auto-hide notification after 1.2 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification((n) => ({ ...n, show: false }));
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
     <div className="products-page">
+      {/* Notification */}
+      {notification.show && (
+        <div className={`notification-icon-popup ${notification.type}`}>
+          {notification.type === "success" ? (
+            <span className="tick-popup-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="22"
+                  fill="#48bb78"
+                  fillOpacity="0.18"
+                />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="18"
+                  fill="#48bb78"
+                  fillOpacity="0.32"
+                />
+                <path
+                  className="tick-path"
+                  d="M16 25L22 31L33 19"
+                  stroke="#48bb78"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          ) : (
+            <span className="x-popup-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="22"
+                  fill="#f56565"
+                  fillOpacity="0.18"
+                />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="18"
+                  fill="#f56565"
+                  fillOpacity="0.32"
+                />
+                <path
+                  className="x-path"
+                  d="M18 18L30 30M30 18L18 30"
+                  stroke="#f56565"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+          )}
+        </div>
+      )}
+      {/* Confirmation Modal */}
+      {confirmDeleteId !== null && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.32)",
+            zIndex: 1200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="modal"
+            style={{
+              background: "var(--color-bg-secondary)",
+              borderRadius: 16,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              padding: "32px 28px",
+              minWidth: 320,
+              maxWidth: "90vw",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontSize: 18, marginBottom: 18 }}>
+              Haqiqatan ham{" "}
+              <b>{products.find((p) => p.id === confirmDeleteId)?.name}</b>{" "}
+              mahsulotini o‘chirmoqchimisiz?
+            </p>
+            <div
+              className="modal-actions"
+              style={{ display: "flex", gap: 16, justifyContent: "center" }}
+            >
+              <button
+                className="confirm-btn"
+                style={{
+                  background: "#e53e3e",
+                  color: "#fff",
+                  padding: "8px 20px",
+                  borderRadius: 8,
+                  border: "none",
+                  fontWeight: 600,
+                  cursor: deleteLoading ? "not-allowed" : "pointer",
+                  opacity: deleteLoading ? 0.7 : 1,
+                  position: "relative",
+                  transition: "background 0.18s, opacity 0.18s",
+                }}
+                onClick={() => handleDeleteProduct(confirmDeleteId)}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <span
+                    className="btn-spinner"
+                    style={{
+                      display: "inline-block",
+                      verticalAlign: "middle",
+                      width: 20,
+                      height: 20,
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 50 50">
+                      <circle
+                        cx="25"
+                        cy="25"
+                        r="20"
+                        fill="none"
+                        stroke="#fff"
+                        strokeWidth="5"
+                        strokeDasharray="31.4 31.4"
+                        strokeLinecap="round"
+                      >
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from="0 25 25"
+                          to="360 25 25"
+                          dur="0.8s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    </svg>
+                  </span>
+                ) : (
+                  "Ha, o‘chirish"
+                )}
+              </button>
+              <button
+                className="cancel-btn"
+                style={{
+                  background: "#f2f2f2",
+                  color: "#222",
+                  padding: "8px 20px",
+                  borderRadius: 8,
+                  border: "none",
+                  fontWeight: 500,
+                  cursor: deleteLoading ? "not-allowed" : "pointer",
+                  opacity: deleteLoading ? 0.7 : 1,
+                  transition: "background 0.18s, opacity 0.18s",
+                }}
+                onClick={() => !deleteLoading && setConfirmDeleteId(null)}
+                disabled={deleteLoading}
+              >
+                Bekor qilish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="content-wrapper no-right-column">
         <div className="main-content">
           <div className="header-section">
@@ -291,19 +513,11 @@ const ProductsPage = () => {
                       >
                         <button
                           onClick={() => {
-                            // handle bulk edit logic
-                            setHeaderMenuOpen(false);
-                          }}
-                        >
-                          Bulk Edit
-                        </button>
-                        <button
-                          onClick={() => {
                             // handle bulk delete logic
                             setHeaderMenuOpen(false);
                           }}
                         >
-                          Bulk Delete
+                          Tanlanganlarni o'chirish
                         </button>
                       </div>
                     )}
@@ -385,14 +599,77 @@ const ProductsPage = () => {
                               onClick={() => {
                                 /* handle edit logic */ setMenuOpenId(null);
                               }}
+                              className="dropdown-action-btn"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                              }}
                             >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                style={{ display: "inline" }}
+                              >
+                                <path
+                                  d="M14.69 3.86a2.1 2.1 0 0 1 2.97 2.97l-8.5 8.5a2 2 0 0 1-.71.44l-3.13 1.04a.5.5 0 0 1-.63-.63l1.04-3.13a2 2 0 0 1 .44-.71l8.5-8.5Zm2.12-2.12a3.6 3.6 0 0 0-5.09 0l-8.5 8.5a4.5 4.5 0 0 0-.99 1.6l-1.04 3.13A2 2 0 0 0 2.6 18.1l3.13-1.04a4.5 4.5 0 0 0 1.6-.99l8.5-8.5a3.6 3.6 0 0 0 0-5.09Z"
+                                  stroke="#4A90E2"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
                               Edit
                             </button>
                             <button
                               onClick={() => {
-                                /* handle delete logic */ setMenuOpenId(null);
+                                setConfirmDeleteId(product.id);
+                                setMenuOpenId(null);
+                              }}
+                              className="dropdown-action-btn"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
                               }}
                             >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                style={{ display: "inline" }}
+                              >
+                                <rect
+                                  x="5"
+                                  y="7"
+                                  width="10"
+                                  height="8"
+                                  rx="1"
+                                  stroke="#E53E3E"
+                                  strokeWidth="1.5"
+                                />
+                                <path
+                                  d="M8 9v4M12 9v4"
+                                  stroke="#E53E3E"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                />
+                                <path
+                                  d="M3 7h14"
+                                  stroke="#E53E3E"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                />
+                                <path
+                                  d="M8 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"
+                                  stroke="#E53E3E"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
                               Delete
                             </button>
                           </div>
