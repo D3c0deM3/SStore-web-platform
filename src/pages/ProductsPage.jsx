@@ -33,6 +33,7 @@ const ProductsPage = () => {
     error: null,
   });
   const [categories, setCategories] = useState([]);
+  const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -247,9 +248,13 @@ const ProductsPage = () => {
   };
 
   const handleEditFieldChange = (field, value) => {
+    // Ensure category_id is always a number
     setEditModal((prev) => ({
       ...prev,
-      form: { ...prev.form, [field]: value },
+      form: {
+        ...prev.form,
+        [field]: field === "category_id" ? Number(value) : value,
+      },
     }));
   };
 
@@ -277,6 +282,8 @@ const ProductsPage = () => {
     }
     // Prepare payload (category_id required, not category_name)
     const payload = { ...editModal.form };
+    // Ensure category_id is a number
+    if (payload.category_id) payload.category_id = Number(payload.category_id);
     if (
       payload.category_id === undefined &&
       payload.category_name &&
@@ -306,7 +313,9 @@ const ProductsPage = () => {
         // Update product in UI
         setProducts((prev) =>
           prev.map((p) =>
-            p.id === payload.id ? { ...p, ...editModal.form } : p
+            p.id === payload.id
+              ? { ...p, ...editModal.form, category_id: payload.category_id }
+              : p
           )
         );
         setNotification({ show: true, type: "success" });
@@ -369,6 +378,44 @@ const ProductsPage = () => {
     };
   }, [editModal.show, apiBaseUrl]);
 
+  const handleBulkDelete = () => {
+    setBulkDeleteModal(true);
+    setHeaderMenuOpen(false);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deleteLoading || selectedIds.length === 0) return;
+    setDeleteLoading(true);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setNotification({ show: true, type: "error" });
+      setDeleteLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/products/delete/several/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+      if (res.status === 200) {
+        setProducts((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
+        setSelectedIds([]);
+        setNotification({ show: true, type: "success" });
+        setBulkDeleteModal(false);
+      } else {
+        setNotification({ show: true, type: "error" });
+      }
+    } catch (err) {
+      setNotification({ show: true, type: "error" });
+    }
+    setDeleteLoading(false);
+  };
+
+  // ...existing code...
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
@@ -881,6 +928,178 @@ const ProductsPage = () => {
           </div>
         </div>
       )}
+      {bulkDeleteModal && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.32)",
+            zIndex: 1200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="modal"
+            style={{
+              background: "var(--color-bg-secondary)",
+              borderRadius: 16,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              padding: "32px 28px",
+              minWidth: 320,
+              maxWidth: "90vw",
+              textAlign: "center",
+            }}
+          >
+            {selectedIds.length === 0 ? (
+              <>
+                <p
+                  style={{
+                    fontSize: 18,
+                    marginBottom: 18,
+                    color: "#e53e3e",
+                    fontWeight: 600,
+                  }}
+                >
+                  O'chirish uchun hech qanday mahsulot tanlanmadi.
+                </p>
+                <div
+                  className="modal-actions"
+                  style={{ display: "flex", gap: 16, justifyContent: "center" }}
+                >
+                  <button
+                    className="ok-btn"
+                    style={{
+                      background: "#4caf50",
+                      color: "#fff",
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "none",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      cursor: deleteLoading ? "not-allowed" : "pointer",
+                      opacity: deleteLoading ? 0.7 : 1,
+                      transition: "background 0.18s, opacity 0.18s",
+                    }}
+                    onClick={() => setBulkDeleteModal(false)}
+                    disabled={deleteLoading}
+                  >
+                    OK
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 18, marginBottom: 18 }}>
+                  {selectedIds.length === 1
+                    ? `Haqiqatan ham tanlangan bu mahsulotni o‘chirmoqchimisiz?`
+                    : `Haqiqatan ham tanlangan bu mahsulotlarni o‘chirmoqchimisiz?`}
+                  <br />
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: 10,
+                      color: "#ffb3b3",
+                      fontWeight: 500,
+                      fontSize: 15,
+                      textAlign: "left",
+                      maxHeight: 120,
+                      overflowY: "auto",
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    {products
+                      .filter((p) => selectedIds.includes(p.id))
+                      .map((p) => `• ${p.name}`)
+                      .join("\n")}
+                  </span>
+                </p>
+                <div
+                  className="modal-actions"
+                  style={{ display: "flex", gap: 16, justifyContent: "center" }}
+                >
+                  <button
+                    className="confirm-btn"
+                    style={{
+                      background: "#e53e3e",
+                      color: "#fff",
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "none",
+                      fontWeight: 600,
+                      cursor: deleteLoading ? "not-allowed" : "pointer",
+                      opacity: deleteLoading ? 0.7 : 1,
+                      position: "relative",
+                      transition: "background 0.18s, opacity 0.18s",
+                    }}
+                    onClick={confirmBulkDelete}
+                    disabled={deleteLoading}
+                  >
+                    {deleteLoading ? (
+                      <span
+                        className="btn-spinner"
+                        style={{
+                          display: "inline-block",
+                          verticalAlign: "middle",
+                          width: 20,
+                          height: 20,
+                        }}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 50 50">
+                          <circle
+                            cx="25"
+                            cy="25"
+                            r="20"
+                            fill="none"
+                            stroke="#fff"
+                            strokeWidth="5"
+                            strokeDasharray="31.4 31.4"
+                            strokeLinecap="round"
+                          >
+                            <animateTransform
+                              attributeName="transform"
+                              type="rotate"
+                              from="0 25 25"
+                              to="360 25 25"
+                              dur="0.8s"
+                              repeatCount="indefinite"
+                            />
+                          </circle>
+                        </svg>
+                      </span>
+                    ) : (
+                      "Ha, o‘chirish"
+                    )}
+                  </button>
+                  <button
+                    className="cancel-btn"
+                    style={{
+                      background: "#f2f2f2",
+                      color: "#222",
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "none",
+                      fontWeight: 500,
+                      cursor: deleteLoading ? "not-allowed" : "pointer",
+                      opacity: deleteLoading ? 0.7 : 1,
+                      transition: "background 0.18s, opacity 0.18s",
+                    }}
+                    onClick={() => !deleteLoading && setBulkDeleteModal(false)}
+                    disabled={deleteLoading}
+                  >
+                    Bekor qilish
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <div className="content-wrapper no-right-column">
         <div className="main-content">
           <div className="header-section">
@@ -1014,11 +1233,49 @@ const ProductsPage = () => {
                         }}
                       >
                         <button
-                          onClick={() => {
-                            // handle bulk delete logic
-                            setHeaderMenuOpen(false);
+                          onClick={handleBulkDelete}
+                          className="dropdown-action-btn"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
                           }}
                         >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            style={{ display: "inline" }}
+                          >
+                            <rect
+                              x="5"
+                              y="7"
+                              width="10"
+                              height="8"
+                              rx="1"
+                              stroke="#E53E3E"
+                              strokeWidth="1.5"
+                            />
+                            <path
+                              d="M8 9v4M12 9v4"
+                              stroke="#E53E3E"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M3 7h14"
+                              stroke="#E53E3E"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M8 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"
+                              stroke="#E53E3E"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
                           Tanlanganlarni o'chirish
                         </button>
                       </div>
