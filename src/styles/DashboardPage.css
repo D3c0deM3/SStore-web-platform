@@ -166,6 +166,34 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  filter: var(--sidebar-icon-filter, none);
+}
+
+/* Always white in dark theme, both active and inactive */
+.menu li .icon {
+  filter: brightness(0) invert(1);
+}
+
+/* Light theme icon color adjustments */
+.light-theme .menu li .icon {
+  /* Green for not active and active icons in light theme */
+  filter: brightness(0) saturate(100%) invert(41%) sepia(16%) saturate(1162%)
+    hue-rotate(120deg) brightness(0.95);
+}
+.light-theme .menu li.active .icon {
+  /* Green for active icon in light theme */
+  filter: brightness(0) saturate(100%) invert(41%) sepia(16%) saturate(1162%)
+    hue-rotate(120deg) brightness(0.95);
+}
+
+/* Dark theme: keep icons white when not active, green when active */
+.menu li .icon {
+  /* Default: white */
+  filter: brightness(0) invert(1);
+}
+.menu li.active .icon {
+  /* Always white for active icon in any theme */
+  filter: brightness(0) invert(1) !important;
 }
 
 .menu li .home-icon {
