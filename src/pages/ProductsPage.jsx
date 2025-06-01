@@ -50,6 +50,7 @@ const ProductsPage = () => {
   });
   const [addProductLoading, setAddProductLoading] = useState(false);
   const [addProductError, setAddProductError] = useState("");
+  const [addProductButtonLoading, setAddProductButtonLoading] = useState(false);
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -115,12 +116,45 @@ const ProductsPage = () => {
     };
   }, [menuOpenId, headerMenuOpen]);
 
-  const handleAddProduct = () => setShowAddProduct(true);
+  const handleFetchCategoriesForAddProduct = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await fetch(`${apiBaseUrl}/api/categories/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      const data = await res.json();
+      setCategories(data);
+
+      // Set default category_id to the ID of the first category
+      if (data.length > 0) {
+        setAddProductForm((prev) => ({
+          ...prev,
+          category_id: data[0].id,
+        }));
+      }
+    } catch (err) {
+      setCategories([]);
+    }
+  };
+
+  const handleAddProduct = async () => {
+    setAddProductButtonLoading(true);
+    await handleFetchCategoriesForAddProduct();
+    setShowAddProduct(true);
+    setAddProductButtonLoading(false);
+  };
 
   const handleCloseAddProduct = () => {
+    const defaultCategoryId = categories.length > 0 ? categories[0].id : "";
     setShowAddProduct(false);
     setAddProductForm({
-      category_id: categories.length > 0 ? categories[0].id : "",
+      category_id: defaultCategoryId,
       name: "",
       quantity: "",
       quantity_type: "numeric",
@@ -137,21 +171,73 @@ const ProductsPage = () => {
   const handleSaveAddProduct = async () => {
     setAddProductLoading(true);
     setAddProductError("");
+
+    // Validate fields except dropdowns
+    const requiredFields = ["name", "quantity", "price_per_quantity", "status"];
+    const missingFields = requiredFields.filter(
+      (field) => !addProductForm[field]
+    );
+
+    if (missingFields.length > 0) {
+      setAddProductError("Iltimos, barcha maydonlarni to'ldiring.");
+      setAddProductLoading(false);
+      return;
+    }
+
     try {
-      // Replace with your API call
-      const response = await fetch("/api/products/create/", {
+      const payload = {
+        category_id: Number(addProductForm.category_id),
+        name: addProductForm.name,
+        quantity: Number(addProductForm.quantity),
+        quantity_type: addProductForm.quantity_type,
+        price_per_quantity: parseFloat(
+          addProductForm.price_per_quantity
+        ).toFixed(2),
+        status: addProductForm.status,
+      };
+
+      console.log("Payload being sent:", payload);
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token not found");
+
+      const response = await fetch(`${apiBaseUrl}/api/products/create/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...addProductForm,
-          quantity: Number(addProductForm.quantity),
-          price_per_quantity: addProductForm.price_per_quantity,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify(payload),
       });
+
       if (!response.ok) throw new Error("Mahsulotni yaratib bolmadi");
+
+      // Instead of just adding the returned product, fetch the full list again
+      const fetchProducts = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+        try {
+          const response = await fetch(`${apiBaseUrl}/api/products/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          if (!response.ok) throw new Error("Failed to fetch products");
+          const data = await response.json();
+          setProducts(data.products || []);
+        } catch (error) {
+          setError(error.message);
+        }
+      };
+      await fetchProducts();
       setShowAddProduct(false);
-      // Optionally refresh products list here
     } catch (e) {
+      console.error("Error while creating product:", e);
       setAddProductError(e.message || "Xatolik yuz berdi");
     } finally {
       setAddProductLoading(false);
@@ -177,8 +263,10 @@ const ProductsPage = () => {
   const fewPercent = totalProducts ? (fewCount / totalProducts) * 100 : 0;
   const endedPercent = totalProducts ? (endedCount / totalProducts) * 100 : 0;
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name &&
+      product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleOptionsClick = (event, productId) => {
@@ -575,8 +663,14 @@ const ProductsPage = () => {
               <button className="download-btn">
                 <span className="download-icon" />
               </button>
-              <button className="add-product-btn" onClick={handleAddProduct}>
-                + Mahsulot qo'shish
+              <button
+                className="add-product-btn"
+                onClick={handleAddProduct}
+                disabled={addProductButtonLoading}
+              >
+                {addProductButtonLoading
+                  ? "Yuklanmoqda..."
+                  : "+ Mahsulot qo'shish"}
               </button>
             </div>
           </div>
