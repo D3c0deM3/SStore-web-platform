@@ -25,6 +25,14 @@ const ProductsPage = () => {
     message: "",
   });
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editModal, setEditModal] = useState({
+    show: false,
+    loading: false,
+    initial: null, // initial product data
+    form: null, // editable form data
+    error: null,
+  });
+  const [categories, setCategories] = useState([]);
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -203,6 +211,164 @@ const ProductsPage = () => {
     }
   }, [notification.show]);
 
+  // Edit modal handlers
+  const handleEditProduct = async (productId) => {
+    setEditModal((prev) => ({
+      ...prev,
+      show: true,
+      loading: true,
+      error: null,
+    }));
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setEditModal((prev) => ({ ...prev, loading: false, error: "No token" }));
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/products/edit/${productId}/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch product");
+      const data = await res.json();
+      setEditModal({
+        show: true,
+        loading: false,
+        initial: data,
+        form: { ...data },
+        error: null,
+      });
+    } catch (err) {
+      setEditModal((prev) => ({ ...prev, loading: false, error: err.message }));
+    }
+  };
+
+  const handleEditFieldChange = (field, value) => {
+    setEditModal((prev) => ({
+      ...prev,
+      form: { ...prev.form, [field]: value },
+    }));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editModal.form || !editModal.initial) return;
+    // Compare changes
+    const changed = Object.keys(editModal.form).some(
+      (key) => editModal.form[key] !== editModal.initial[key]
+    );
+    if (!changed) {
+      setEditModal({
+        show: false,
+        loading: false,
+        initial: null,
+        form: null,
+        error: null,
+      });
+      return;
+    }
+    setEditModal((prev) => ({ ...prev, loading: true, error: null }));
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setEditModal((prev) => ({ ...prev, loading: false, error: "No token" }));
+      return;
+    }
+    // Prepare payload (category_id required, not category_name)
+    const payload = { ...editModal.form };
+    if (
+      payload.category_id === undefined &&
+      payload.category_name &&
+      products.length > 0
+    ) {
+      // Try to find category_id from products list
+      const found = products.find(
+        (p) => p.category_name === payload.category_name
+      );
+      if (found) payload.category_id = found.category_id;
+    }
+    // Remove category_name from payload if present
+    delete payload.category_name;
+    try {
+      const res = await fetch(
+        `${apiBaseUrl}/api/products/update/${payload.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (res.status === 200) {
+        // Update product in UI
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === payload.id ? { ...p, ...editModal.form } : p
+          )
+        );
+        setNotification({ show: true, type: "success" });
+        setEditModal({
+          show: false,
+          loading: false,
+          initial: null,
+          form: null,
+          error: null,
+        });
+      } else {
+        setEditModal((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Update failed",
+        }));
+        setNotification({ show: true, type: "error" });
+      }
+    } catch (err) {
+      setEditModal((prev) => ({ ...prev, loading: false, error: err.message }));
+      setNotification({ show: true, type: "error" });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditModal({
+      show: false,
+      loading: false,
+      initial: null,
+      form: null,
+      error: null,
+    });
+  };
+
+  // Fetch categories when edit modal is shown
+  useEffect(() => {
+    if (!editModal.show) return;
+    let ignore = false;
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await fetch(`${apiBaseUrl}/api/categories/`, {
+          method: "GET",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const data = await res.json();
+        if (!ignore) setCategories(data);
+      } catch (err) {
+        if (!ignore) setCategories([]);
+      }
+    };
+    fetchCategories();
+    return () => {
+      ignore = true;
+    };
+  }, [editModal.show, apiBaseUrl]);
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
@@ -372,6 +538,342 @@ const ProductsPage = () => {
                 }}
                 onClick={() => !deleteLoading && setConfirmDeleteId(null)}
                 disabled={deleteLoading}
+              >
+                Bekor qilish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Product Modal */}
+      {editModal.show && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.32)",
+            zIndex: 1300,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="modal edit-modal"
+            style={{
+              background: "var(--color-bg-secondary)",
+              borderRadius: 20,
+              boxShadow: "0 12px 48px rgba(0,0,0,0.22)",
+              padding: "48px 40px 36px 40px",
+              minWidth: 420,
+              maxWidth: "98vw",
+              width: 480,
+              textAlign: "center",
+              fontFamily: "Inter, Segoe UI, Arial, sans-serif",
+              position: "relative",
+              transition: "box-shadow 0.2s",
+              color: "#fff", // Make all text white by default
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                marginBottom: 32,
+                color: "var(--modal-label-color, #fff)",
+              }}
+            >
+              Mahsulotni tahrirlash
+            </h2>
+            {editModal.loading && (
+              <div
+                className="loading-spinner"
+                style={{ marginBottom: 18, fontSize: 18, color: "#fff" }}
+              >
+                Loading...
+              </div>
+            )}
+            {editModal.error && (
+              <div
+                className="error-message"
+                style={{
+                  marginBottom: 18,
+                  color: "#ffb3b3",
+                  fontWeight: 500,
+                  fontSize: 16,
+                }}
+              >
+                {editModal.error}
+              </div>
+            )}
+            <div
+              className="edit-form"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 22,
+                marginBottom: 18,
+              }}
+            >
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Mahsulot nomi
+                </label>
+                <input
+                  type="text"
+                  value={editModal.form?.name || ""}
+                  onChange={(e) =>
+                    handleEditFieldChange("name", e.target.value)
+                  }
+                  disabled={editModal.loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                  }}
+                />
+              </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Kategoriya
+                </label>
+                <select
+                  value={
+                    categories.some(
+                      (cat) =>
+                        String(cat.id) === String(editModal.form?.category_id)
+                    )
+                      ? String(editModal.form?.category_id)
+                      : categories.length > 0
+                      ? String(categories[0].id)
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const selectedCategory = categories.find(
+                      (c) => String(c.id) === selectedId
+                    );
+                    handleEditFieldChange("category_id", selectedId);
+                    if (selectedCategory) {
+                      handleEditFieldChange(
+                        "category_name",
+                        selectedCategory.name
+                      );
+                    }
+                  }}
+                  disabled={editModal.loading || categories.length === 0}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    appearance: "none",
+                  }}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Qoldiq
+                </label>
+                <input
+                  type="number"
+                  value={editModal.form?.quantity || ""}
+                  onChange={(e) =>
+                    handleEditFieldChange("quantity", e.target.value)
+                  }
+                  disabled={editModal.loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    MozAppearance: "textfield",
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onWheel={(e) => e.target.blur()}
+                  onKeyDown={(e) =>
+                    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+                    e.preventDefault()
+                  }
+                />
+              </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Narx
+                </label>
+                <input
+                  type="number"
+                  value={editModal.form?.price_per_quantity || ""}
+                  onChange={(e) =>
+                    handleEditFieldChange("price_per_quantity", e.target.value)
+                  }
+                  disabled={editModal.loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    MozAppearance: "textfield",
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onWheel={(e) => e.target.blur()}
+                  onKeyDown={(e) =>
+                    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+                    e.preventDefault()
+                  }
+                />
+              </div>
+            </div>
+            <div
+              className="modal-actions"
+              style={{
+                display: "flex",
+                gap: 18,
+                justifyContent: "center",
+                marginTop: 18,
+              }}
+            >
+              <button
+                className="save-btn"
+                style={{
+                  background: "#4caf50",
+                  color: "#fff",
+                  padding: "12px 32px",
+                  borderRadius: 10,
+                  border: "none",
+                  fontWeight: 700,
+                  fontSize: 16,
+                  cursor: editModal.loading ? "not-allowed" : "pointer",
+                  opacity: editModal.loading ? 0.7 : 1,
+                  position: "relative",
+                  transition: "background 0.18s, opacity 0.18s",
+                  boxShadow: "0 2px 8px rgba(76,175,80,0.08)",
+                }}
+                onClick={handleSaveEdit}
+                disabled={editModal.loading}
+              >
+                {editModal.loading ? (
+                  <span
+                    className="btn-spinner"
+                    style={{
+                      display: "inline-block",
+                      verticalAlign: "middle",
+                      width: 20,
+                      height: 20,
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 50 50">
+                      <circle
+                        cx="25"
+                        cy="25"
+                        r="20"
+                        fill="none"
+                        stroke="#fff"
+                        strokeWidth="5"
+                        strokeDasharray="31.4 31.4"
+                        strokeLinecap="round"
+                      >
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from="0 25 25"
+                          to="360 25 25"
+                          dur="0.8s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    </svg>
+                  </span>
+                ) : (
+                  "Saqlash"
+                )}
+              </button>
+              <button
+                className="cancel-btn"
+                style={{
+                  background: "#f2f2f2",
+                  color: "#222",
+                  padding: "12px 32px",
+                  borderRadius: 10,
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: 16,
+                  cursor: editModal.loading ? "not-allowed" : "pointer",
+                  opacity: editModal.loading ? 0.7 : 1,
+                  transition: "background 0.18s, opacity 0.18s",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                }}
+                onClick={handleCancelEdit}
+                disabled={editModal.loading}
               >
                 Bekor qilish
               </button>
@@ -597,7 +1099,8 @@ const ProductsPage = () => {
                           >
                             <button
                               onClick={() => {
-                                /* handle edit logic */ setMenuOpenId(null);
+                                handleEditProduct(product.id);
+                                setMenuOpenId(null);
                               }}
                               className="dropdown-action-btn"
                               style={{
@@ -621,7 +1124,7 @@ const ProductsPage = () => {
                                   strokeLinejoin="round"
                                 />
                               </svg>
-                              Edit
+                              Tahrirlash
                             </button>
                             <button
                               onClick={() => {
@@ -670,7 +1173,7 @@ const ProductsPage = () => {
                                   strokeLinecap="round"
                                 />
                               </svg>
-                              Delete
+                              O'chirish
                             </button>
                           </div>
                         )}

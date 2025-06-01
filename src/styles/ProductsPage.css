@@ -29,6 +29,8 @@
   --color-accent: #4299e1;
   --color-shadow: rgba(0, 0, 0, 0.08);
   --search-icon: url("../assets/dashboard/search-light.svg");
+  --modal-label-color: #222;
+  --modal-input-bg: #f3f4f6;
 }
 
 /* Base Styles */
