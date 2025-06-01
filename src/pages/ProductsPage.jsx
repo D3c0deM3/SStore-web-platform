@@ -57,34 +57,48 @@ const ProductsPage = () => {
   const apiBaseUrl =
     process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
+  // Fetch products and categories together, then map category_name
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProductsAndCategories = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
         navigate("/login");
         return;
       }
-
+      setLoading(true);
       try {
-        const response = await fetch(`${apiBaseUrl}/api/products/`, {
-          method: "GET",
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch products");
-        const data = await response.json();
-        setProducts(data.products || []);
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/api/products/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+          fetch(`${apiBaseUrl}/api/categories/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+        ]);
+        if (!productsRes.ok) throw new Error("Failed to fetch products");
+        if (!categoriesRes.ok) throw new Error("Failed to fetch categories");
+        const productsData = await productsRes.json();
+        const categoriesData = await categoriesRes.json();
+        console.log("Fetched productsData:", productsData);
+        console.log("Fetched categoriesData:", categoriesData);
+        setCategories(categoriesData);
+        setProducts(productsData.products || []);
         setLoading(false);
       } catch (error) {
         setError(error.message);
         setLoading(false);
       }
     };
-
-    fetchProducts();
+    fetchProductsAndCategories();
+    // eslint-disable-next-line
   }, [navigate, apiBaseUrl]);
 
   useEffect(() => {
@@ -220,16 +234,30 @@ const ProductsPage = () => {
           return;
         }
         try {
-          const response = await fetch(`${apiBaseUrl}/api/products/`, {
-            method: "GET",
-            headers: {
-              Authorization: `Token ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
-          if (!response.ok) throw new Error("Failed to fetch products");
-          const data = await response.json();
-          setProducts(data.products || []);
+          const [productsRes, categoriesRes] = await Promise.all([
+            fetch(`${apiBaseUrl}/api/products/`, {
+              method: "GET",
+              headers: {
+                Authorization: `Token ${token}`,
+                "Content-Type": "application/json",
+              },
+            }),
+            fetch(`${apiBaseUrl}/api/categories/`, {
+              method: "GET",
+              headers: {
+                Authorization: `Token ${token}`,
+                "Content-Type": "application/json",
+              },
+            }),
+          ]);
+          if (!productsRes.ok) throw new Error("Failed to fetch products");
+          if (!categoriesRes.ok) throw new Error("Failed to fetch categories");
+          const productsData = await productsRes.json();
+          const categoriesData = await categoriesRes.json();
+          console.log("Fetched productsData:", productsData);
+          console.log("Fetched categoriesData:", categoriesData);
+          setCategories(categoriesData);
+          setProducts(productsData.products || []);
         } catch (error) {
           setError(error.message);
         }
@@ -341,7 +369,29 @@ const ProductsPage = () => {
         }
       );
       if (response.status === 200) {
-        setProducts((prev) => prev.filter((p) => p.id !== productId));
+        // Refetch products and categories to keep category_name in sync
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/api/products/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+          fetch(`${apiBaseUrl}/api/categories/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+        ]);
+        if (productsRes.ok && categoriesRes.ok) {
+          const productsData = await productsRes.json();
+          const categoriesData = await categoriesRes.json();
+          setCategories(categoriesData);
+          setProducts(productsData.products || []);
+        }
         setNotification({ show: true, type: "success" });
       } else {
         setNotification({ show: true, type: "error" });
@@ -371,6 +421,29 @@ const ProductsPage = () => {
       loading: true,
       error: null,
     }));
+    // Try to get the product from local state first
+    const localProduct = products.find((p) => p.id === productId);
+    if (localProduct) {
+      // Find the category whose name matches the product's category_name
+      let matchedCategoryId = "";
+      if (localProduct.category_name && categories.length > 0) {
+        const matched = categories.find(
+          (cat) => cat.name === localProduct.category_name
+        );
+        if (matched) matchedCategoryId = String(matched.id);
+      }
+      setEditModal({
+        show: true,
+        loading: false,
+        initial: localProduct,
+        form: {
+          ...localProduct,
+          category_id: matchedCategoryId || String(localProduct.category_id),
+        },
+        error: null,
+      });
+      return;
+    }
     const token = localStorage.getItem("token");
     if (!token) {
       setEditModal((prev) => ({ ...prev, loading: false, error: "No token" }));
@@ -386,11 +459,20 @@ const ProductsPage = () => {
       });
       if (!res.ok) throw new Error("Failed to fetch product");
       const data = await res.json();
+      // Find the category whose name matches the product's category_name
+      let matchedCategoryId = "";
+      if (data.category_name && categories.length > 0) {
+        const matched = categories.find((cat) => cat.name === data.category_name);
+        if (matched) matchedCategoryId = String(matched.id);
+      }
       setEditModal({
         show: true,
         loading: false,
         initial: data,
-        form: { ...data },
+        form: {
+          ...data,
+          category_id: matchedCategoryId || String(data.category_id),
+        },
         error: null,
       });
     } catch (err) {
@@ -399,12 +481,11 @@ const ProductsPage = () => {
   };
 
   const handleEditFieldChange = (field, value) => {
-    // Ensure category_id is always a number
     setEditModal((prev) => ({
       ...prev,
       form: {
         ...prev.form,
-        [field]: field === "category_id" ? Number(value) : value,
+        [field]: field === "category_id" ? String(value) : value, // always string
       },
     }));
   };
@@ -461,14 +542,29 @@ const ProductsPage = () => {
         }
       );
       if (res.status === 200) {
-        // Update product in UI
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === payload.id
-              ? { ...p, ...editModal.form, category_id: payload.category_id }
-              : p
-          )
-        );
+        // Refetch products and categories to keep category_name in sync
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/api/products/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+          fetch(`${apiBaseUrl}/api/categories/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+        ]);
+        if (productsRes.ok && categoriesRes.ok) {
+          const productsData = await productsRes.json();
+          const categoriesData = await categoriesRes.json();
+          setCategories(categoriesData);
+          setProducts(productsData.products || []);
+        }
         setNotification({ show: true, type: "success" });
         setEditModal({
           show: false,
@@ -553,7 +649,29 @@ const ProductsPage = () => {
         body: JSON.stringify({ ids: selectedIds }),
       });
       if (res.status === 200) {
-        setProducts((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
+        // Refetch products and categories to keep category_name in sync
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/api/products/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+          fetch(`${apiBaseUrl}/api/categories/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+        ]);
+        if (productsRes.ok && categoriesRes.ok) {
+          const productsData = await productsRes.json();
+          const categoriesData = await categoriesRes.json();
+          setCategories(categoriesData);
+          setProducts(productsData.products || []);
+        }
         setSelectedIds([]);
         setNotification({ show: true, type: "success" });
         setBulkDeleteModal(false);

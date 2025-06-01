@@ -128,15 +128,7 @@ const EditProductModal = ({
               Kategoriya
             </label>
             <select
-              value={
-                categories.some(
-                  (cat) => String(cat.id) === String(form?.category_id)
-                )
-                  ? String(form?.category_id)
-                  : categories.length > 0
-                  ? String(categories[0].id)
-                  : ""
-              }
+              value={form?.category_id || ""}
               onChange={(e) => {
                 const selectedId = e.target.value;
                 const selectedCategory = categories.find(
