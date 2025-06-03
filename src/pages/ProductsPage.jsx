@@ -6,7 +6,7 @@ import NotificationPopup from "../components/NotificationPopup";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import BulkDeleteModal from "../components/BulkDeleteModal";
 import EditProductModal from "../components/EditProductModal";
-import AddProductDrawer from "../components/AddProductDrawer";
+import AddProductModal from "../components/AddProductDrawer";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
@@ -51,6 +51,7 @@ const ProductsPage = () => {
   const [addProductLoading, setAddProductLoading] = useState(false);
   const [addProductError, setAddProductError] = useState("");
   const [addProductButtonLoading, setAddProductButtonLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -87,8 +88,6 @@ const ProductsPage = () => {
         if (!categoriesRes.ok) throw new Error("Failed to fetch categories");
         const productsData = await productsRes.json();
         const categoriesData = await categoriesRes.json();
-        console.log("Fetched productsData:", productsData);
-        console.log("Fetched categoriesData:", categoriesData);
         setCategories(categoriesData);
         setProducts(productsData.products || []);
         setLoading(false);
@@ -199,30 +198,57 @@ const ProductsPage = () => {
     }
 
     try {
-      const payload = {
-        category_id: Number(addProductForm.category_id),
-        name: addProductForm.name,
-        quantity: Number(addProductForm.quantity),
-        quantity_type: addProductForm.quantity_type,
-        price_per_quantity: parseFloat(
-          addProductForm.price_per_quantity
-        ).toFixed(2),
-        status: addProductForm.status,
-      };
-
-      console.log("Payload being sent:", payload);
-
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token not found");
 
-      const response = await fetch(`${apiBaseUrl}/api/products/create/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      let response;
+      if (addProductForm.localImageFile) {
+        // Use FormData if image file is present
+        const formData = new FormData();
+        formData.append("category_id", Number(addProductForm.category_id));
+        formData.append("name", addProductForm.name);
+        formData.append("quantity", Number(addProductForm.quantity));
+        formData.append("quantity_type", addProductForm.quantity_type);
+        formData.append(
+          "price_per_quantity",
+          parseFloat(addProductForm.price_per_quantity).toFixed(2)
+        );
+        formData.append("status", addProductForm.status);
+        formData.append("image", addProductForm.localImageFile);
+        // Debug: log FormData keys and values
+        for (let pair of formData.entries()) {
+          console.log(`[ProductsPage] FormData: ${pair[0]} =`, pair[1]);
+        }
+        response = await fetch(`${apiBaseUrl}/api/products/create/`, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+          body: formData,
+        });
+      } else {
+        // Otherwise, send JSON as before
+        const payload = {
+          category_id: Number(addProductForm.category_id),
+          name: addProductForm.name,
+          quantity: Number(addProductForm.quantity),
+          quantity_type: addProductForm.quantity_type,
+          price_per_quantity: parseFloat(
+            addProductForm.price_per_quantity
+          ).toFixed(2),
+          status: addProductForm.status,
+        };
+        // Debug: log JSON payload
+        console.log("[ProductsPage] JSON payload:", payload);
+        response = await fetch(`${apiBaseUrl}/api/products/create/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!response.ok) throw new Error("Mahsulotni yaratib bolmadi");
 
@@ -254,8 +280,6 @@ const ProductsPage = () => {
           if (!categoriesRes.ok) throw new Error("Failed to fetch categories");
           const productsData = await productsRes.json();
           const categoriesData = await categoriesRes.json();
-          console.log("Fetched productsData:", productsData);
-          console.log("Fetched categoriesData:", categoriesData);
           setCategories(categoriesData);
           setProducts(productsData.products || []);
         } catch (error) {
@@ -274,7 +298,6 @@ const ProductsPage = () => {
       });
       setShowAddProduct(false);
     } catch (e) {
-      console.error("Error while creating product:", e);
       setAddProductError(e.message || "Xatolik yuz berdi");
     } finally {
       setAddProductLoading(false);
@@ -462,7 +485,9 @@ const ProductsPage = () => {
       // Find the category whose name matches the product's category_name
       let matchedCategoryId = "";
       if (data.category_name && categories.length > 0) {
-        const matched = categories.find((cat) => cat.name === data.category_name);
+        const matched = categories.find(
+          (cat) => cat.name === data.category_name
+        );
         if (matched) matchedCategoryId = String(matched.id);
       }
       setEditModal({
@@ -472,6 +497,7 @@ const ProductsPage = () => {
         form: {
           ...data,
           category_id: matchedCategoryId || String(data.category_id),
+          image_url: data.image_url || data.image || "", // always set image_url for edit
         },
         error: null,
       });
@@ -492,11 +518,35 @@ const ProductsPage = () => {
 
   const handleSaveEdit = async () => {
     if (!editModal.form || !editModal.initial) return;
-    // Compare changes
-    const changed = Object.keys(editModal.form).some(
-      (key) => editModal.form[key] !== editModal.initial[key]
-    );
-    if (!changed) {
+    // Only compare backend fields and normalize types
+    const fieldsToCheck = [
+      "category_id",
+      "name",
+      "quantity",
+      "quantity_type",
+      "price_per_quantity",
+      "status",
+    ];
+    const changed = fieldsToCheck.some((key) => {
+      let formValue = editModal.form[key];
+      let initialValue = editModal.initial[key];
+      // Normalize types for comparison
+      if (key === "category_id" || key === "quantity") {
+        formValue = Number(formValue);
+        initialValue = Number(initialValue);
+      } else if (key === "price_per_quantity") {
+        formValue = parseFloat(formValue);
+        initialValue = parseFloat(initialValue);
+      } else if (
+        typeof formValue === "string" &&
+        typeof initialValue === "string"
+      ) {
+        formValue = formValue.trim();
+        initialValue = initialValue.trim();
+      }
+      return formValue !== initialValue;
+    });
+    if (!changed && !editModal.form.localImageFile) {
       setEditModal({
         show: false,
         loading: false,
@@ -512,33 +562,64 @@ const ProductsPage = () => {
       setEditModal((prev) => ({ ...prev, loading: false, error: "No token" }));
       return;
     }
-    // Prepare payload (category_id required, not category_name)
-    const payload = { ...editModal.form };
-    // Ensure category_id is a number
-    if (payload.category_id) payload.category_id = Number(payload.category_id);
-    if (
-      payload.category_id === undefined &&
-      payload.category_name &&
-      products.length > 0
-    ) {
-      // Try to find category_id from products list
-      const found = products.find(
-        (p) => p.category_name === payload.category_name
-      );
-      if (found) payload.category_id = found.category_id;
-    }
-    // Remove category_name from payload if present
-    delete payload.category_name;
     try {
+      // Always use FormData for edit
+      const formData = new FormData();
+      formData.append("category_id", Number(editModal.form.category_id));
+      formData.append("name", editModal.form.name);
+      formData.append("quantity", Number(editModal.form.quantity));
+      formData.append("quantity_type", editModal.form.quantity_type);
+      formData.append(
+        "price_per_quantity",
+        parseFloat(editModal.form.price_per_quantity).toFixed(2)
+      );
+      formData.append("status", editModal.form.status);
+      formData.append("id", editModal.form.id);
+      // If a new image file is selected, send it; otherwise, send the current image url from the API (image_url)
+      if (editModal.form.localImageFile) {
+        formData.append("image", editModal.form.localImageFile);
+      } else if (editModal.form.image_url) {
+        // If the image_url is a URL string, fetch the blob and append as File
+        if (
+          typeof editModal.form.image_url === "string" &&
+          editModal.form.image_url.startsWith("http")
+        ) {
+          try {
+            const response = await fetch(editModal.form.image_url);
+            const blob = await response.blob();
+            // Try to extract filename from URL
+            const urlParts = editModal.form.image_url.split("/");
+            const filename = urlParts[urlParts.length - 1] || "image.jpg";
+            const file = new File([blob], filename, { type: blob.type });
+            formData.append("image", file);
+            console.log(
+              "[ProductsPage] No image change, sending current image_url as File:",
+              file
+            );
+          } catch (err) {
+            console.warn(
+              "[ProductsPage] Failed to fetch image_url as File, sending as string:",
+              editModal.form.image_url
+            );
+            formData.append("image", editModal.form.image_url);
+          }
+        } else {
+          formData.append("image", editModal.form.image_url);
+        }
+      }
+
+      // Debug: log FormData keys and values
+      for (let pair of formData.entries()) {
+        console.log(`[ProductsPage] FormData: ${pair[0]} =`, pair[1]);
+      }
       const res = await fetch(
-        `${apiBaseUrl}/api/products/update/${payload.id}/`,
+        `${apiBaseUrl}/api/products/update/${editModal.form.id}/`,
         {
           method: "PUT",
           headers: {
             Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: formData,
         }
       );
       if (res.status === 200) {
@@ -684,6 +765,40 @@ const ProductsPage = () => {
     setDeleteLoading(false);
   };
 
+  // Download report handler
+  const handleDownloadReport = async () => {
+    setDownloadLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token not found");
+      const response = await fetch(`${apiBaseUrl}/api/products/report/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Download failed");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "products_report.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Hisobotni yuklab bo'lmadi",
+      });
+      console.error("Download failed:", error);
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
@@ -721,7 +836,7 @@ const ProductsPage = () => {
         />
       )}
       {/* Add Product Side Card */}
-      <AddProductDrawer
+      <AddProductModal
         show={showAddProduct}
         onClose={handleCloseAddProduct}
         form={addProductForm}
@@ -730,6 +845,7 @@ const ProductsPage = () => {
         onSave={handleSaveAddProduct}
         loading={addProductLoading}
         error={addProductError}
+        apiBaseUrl={apiBaseUrl}
       />
       <div className="content-wrapper no-right-column">
         <div className="main-content">
@@ -787,8 +903,47 @@ const ProductsPage = () => {
               <button className="filter-btn">
                 <span className="filter-icon" />
               </button>
-              <button className="download-btn">
-                <span className="download-icon" />
+              <button
+                className="download-btn"
+                onClick={handleDownloadReport}
+                disabled={downloadLoading}
+              >
+                {downloadLoading ? (
+                  <span
+                    className="btn-spinner"
+                    style={{
+                      width: 18,
+                      height: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 50 50">
+                      <circle
+                        cx="25"
+                        cy="25"
+                        r="20"
+                        fill="none"
+                        stroke="#4A90E2"
+                        strokeWidth="5"
+                        strokeDasharray="31.4 31.4"
+                        strokeLinecap="round"
+                      >
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from="0 25 25"
+                          to="360 25 25"
+                          dur="0.8s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    </svg>
+                  </span>
+                ) : (
+                  <span className="download-icon" />
+                )}
               </button>
               <button
                 className="add-product-btn"
@@ -933,7 +1088,30 @@ const ProductsPage = () => {
                           onChange={() => handleSelectRow(product.id)}
                         />
                       </td>
-                      <td className="product-name">{product.name}</td>
+                      <td className="product-name">
+                        {(product.image_url || product.image) && (
+                          <img
+                            src={
+                              product.image_url
+                                ? product.image_url
+                                : product.image
+                                ? `https://res.cloudinary.com/bnf404/${product.image}`
+                                : undefined
+                            }
+                            alt={product.name}
+                            className="product-table-thumb"
+                          />
+                        )}
+                        <span
+                          style={{
+                            marginLeft:
+                              product.image_url || product.image ? 14 : 0,
+                            verticalAlign: "middle",
+                          }}
+                        >
+                          {product.name}
+                        </span>
+                      </td>
                       <td className="category">
                         {product.category_name || "Boshqa"}
                       </td>

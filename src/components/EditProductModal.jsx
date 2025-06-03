@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 
 const EditProductModal = ({
   show,
@@ -9,7 +9,38 @@ const EditProductModal = ({
   onFieldChange,
   onSave,
   onCancel,
+  apiBaseUrl, // pass this prop from ProductsPage
 }) => {
+  const [imageError, setImageError] = useState("");
+  const fileInputRef = useRef();
+
+  const handleBrowse = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("[EditProductModal] User selected file:", file);
+      onFieldChange("localImage", URL.createObjectURL(file));
+      onFieldChange("localImageFile", file);
+      setImageError("");
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      console.log("[EditProductModal] User dropped file:", file);
+      onFieldChange("localImage", URL.createObjectURL(file));
+      onFieldChange("localImageFile", file);
+      setImageError("");
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   if (!show) return null;
   return (
     <div
@@ -34,9 +65,9 @@ const EditProductModal = ({
           borderRadius: 20,
           boxShadow: "0 12px 48px rgba(0,0,0,0.22)",
           padding: "48px 40px 36px 40px",
-          minWidth: 420,
+          minWidth: 600,
           maxWidth: "98vw",
-          width: 480,
+          width: 700,
           textAlign: "center",
           fontFamily: "Inter, Segoe UI, Arial, sans-serif",
           position: "relative",
@@ -76,170 +107,477 @@ const EditProductModal = ({
           </div>
         )}
         <div
-          className="edit-form"
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: 22,
-            marginBottom: 18,
+            flexDirection: "row",
+            gap: 32,
+            alignItems: "flex-start",
+            justifyContent: "center",
+            marginBottom: 10,
           }}
         >
-          <div className="form-group" style={{ textAlign: "left" }}>
+          {/* Left: Image upload */}
+          <div style={{ flex: 1, minWidth: 180, maxWidth: 240 }}>
             <label
               style={{
                 fontWeight: 600,
                 fontSize: 15,
                 marginBottom: 6,
                 display: "block",
+                textAlign: "left",
                 color: "var(--modal-label-color, #fff)",
               }}
             >
-              Mahsulot nomi
+              Rasm (ixtiyoriy)
             </label>
-            <input
-              type="text"
-              value={form?.name || ""}
-              onChange={(e) => onFieldChange("name", e.target.value)}
-              disabled={loading}
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
               style={{
-                width: "100%",
-                padding: "12px 14px",
+                border: "2px dashed #bdbdbd",
                 borderRadius: 10,
-                border: "1.5px solid #e0e0e0",
-                fontSize: 16,
-                background: "var(--modal-input-bg, #fff)",
-                color: "#222",
-                outline: "none",
-                transition: "border 0.18s",
-                marginTop: 2,
+                padding: 14,
+                textAlign: "center",
+                background: "#fafbfc",
+                cursor: "pointer",
+                position: "relative",
+                marginBottom: 8,
+                minHeight: 180,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 200,
+                overflow: "hidden",
               }}
-            />
+              onClick={() => fileInputRef.current.click()}
+            >
+              {form.localImage ? (
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: 160,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <img
+                    src={form.localImage}
+                    alt="Yangi rasm"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: 160,
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      objectFit: "contain",
+                      background: "#fff",
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                    }}
+                  />
+                  <div
+                    className="image-hover-overlay"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      background: "rgba(0,0,0,0.32)",
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current.click();
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = 0;
+                    }}
+                  >
+                    <svg
+                      width="44"
+                      height="44"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{
+                        background: "rgba(0,0,0,0.32)",
+                        borderRadius: "50%",
+                        padding: 8,
+                      }}
+                    >
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z" />
+                    </svg>
+                  </div>
+                </div>
+              ) : form?.image_url || form?.image ? (
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: 160,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <img
+                    src={
+                      form.image_url
+                        ? form.image_url
+                        : form.image
+                        ? `https://res.cloudinary.com/bnf404/${form.image}`
+                        : undefined
+                    }
+                    alt="Yuklangan rasm"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: 160,
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      objectFit: "contain",
+                      background: "#fff",
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                    }}
+                  />
+                  <div
+                    className="image-hover-overlay"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      background: "rgba(0,0,0,0.32)",
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current.click();
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = 0;
+                    }}
+                  >
+                    <svg
+                      width="44"
+                      height="44"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{
+                        background: "rgba(0,0,0,0.32)",
+                        borderRadius: "50%",
+                        padding: 8,
+                      }}
+                    >
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z" />
+                    </svg>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span
+                    style={{
+                      fontSize: 28,
+                      color: "#bdbdbd",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <svg width="32" height="32" fill="none" viewBox="0 0 36 36">
+                      <rect
+                        x="6"
+                        y="6"
+                        width="24"
+                        height="24"
+                        rx="4"
+                        fill="#f5f6fa"
+                        stroke="#bdbdbd"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M12 24l4.5-6 4.5 6 6-8"
+                        stroke="#bdbdbd"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <div
+                    style={{
+                      color: "#888",
+                      fontSize: 14,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Mahsulot rasmini bu yerga torting yoki
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: "#e3e6ee",
+                      color: "#222",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "5px 14px",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      cursor: "pointer",
+                      marginTop: 4,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current.click();
+                    }}
+                  >
+                    Faylni tanlash
+                  </button>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleBrowse}
+              />
+              {imageError && (
+                <div
+                  style={{
+                    color: "#e53e3e",
+                    fontSize: 13,
+                    marginTop: 4,
+                  }}
+                >
+                  {imageError}
+                </div>
+              )}
+            </div>
+            {((form?.localImage && form?.localImage !== "") ||
+              form?.localImageFile ||
+              (form?.image_url && form?.image_url !== "")) && (
+              <button
+                type="button"
+                style={{
+                  background: "#f2f2f2",
+                  color: "#e53e3e",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "3px 10px",
+                  fontWeight: 500,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  marginBottom: 6,
+                }}
+                onClick={() => {
+                  onFieldChange("localImage", "");
+                  onFieldChange("localImageFile", null);
+                  onFieldChange("image_url", "");
+                }}
+              >
+                Rasmni olib tashlash
+              </button>
+            )}
           </div>
-          <div className="form-group" style={{ textAlign: "left" }}>
-            <label
+          {/* Right: Input fields */}
+          <div style={{ flex: 2 }}>
+            <div
+              className="edit-form"
               style={{
-                fontWeight: 600,
-                fontSize: 15,
-                marginBottom: 6,
-                display: "block",
-                color: "var(--modal-label-color, #fff)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 22,
+                marginBottom: 18,
               }}
             >
-              Kategoriya
-            </label>
-            <select
-              value={form?.category_id || ""}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedCategory = categories.find(
-                  (c) => String(c.id) === selectedId
-                );
-                onFieldChange("category_id", selectedId);
-                if (selectedCategory) {
-                  onFieldChange("category_name", selectedCategory.name);
-                }
-              }}
-              disabled={loading || categories.length === 0}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: "1.5px solid #e0e0e0",
-                fontSize: 16,
-                background: "var(--modal-input-bg, #fff)",
-                color: "#222",
-                outline: "none",
-                transition: "border 0.18s",
-                marginTop: 2,
-                appearance: "none",
-              }}
-            >
-              {categories.map((cat) => (
-                <option key={cat.id} value={String(cat.id)}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group" style={{ textAlign: "left" }}>
-            <label
-              style={{
-                fontWeight: 600,
-                fontSize: 15,
-                marginBottom: 6,
-                display: "block",
-                color: "var(--modal-label-color, #fff)",
-              }}
-            >
-              Qoldiq
-            </label>
-            <input
-              type="number"
-              value={form?.quantity || ""}
-              onChange={(e) => onFieldChange("quantity", e.target.value)}
-              disabled={loading}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: "1.5px solid #e0e0e0",
-                fontSize: 16,
-                background: "var(--modal-input-bg, #fff)",
-                color: "#222",
-                outline: "none",
-                transition: "border 0.18s",
-                marginTop: 2,
-                MozAppearance: "textfield",
-              }}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              onWheel={(e) => e.target.blur()}
-              onKeyDown={(e) =>
-                (e.key === "ArrowUp" || e.key === "ArrowDown") &&
-                e.preventDefault()
-              }
-            />
-          </div>
-          <div className="form-group" style={{ textAlign: "left" }}>
-            <label
-              style={{
-                fontWeight: 600,
-                fontSize: 15,
-                marginBottom: 6,
-                display: "block",
-                color: "var(--modal-label-color, #fff)",
-              }}
-            >
-              Narx
-            </label>
-            <input
-              type="number"
-              value={form?.price_per_quantity || ""}
-              onChange={(e) =>
-                onFieldChange("price_per_quantity", e.target.value)
-              }
-              disabled={loading}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: "1.5px solid #e0e0e0",
-                fontSize: 16,
-                background: "var(--modal-input-bg, #fff)",
-                color: "#222",
-                outline: "none",
-                transition: "border 0.18s",
-                marginTop: 2,
-                MozAppearance: "textfield",
-              }}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              onWheel={(e) => e.target.blur()}
-              onKeyDown={(e) =>
-                (e.key === "ArrowUp" || e.key === "ArrowDown") &&
-                e.preventDefault()
-              }
-            />
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Mahsulot nomi
+                </label>
+                <input
+                  type="text"
+                  value={form?.name || ""}
+                  onChange={(e) => onFieldChange("name", e.target.value)}
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                  }}
+                />
+              </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Kategoriya
+                </label>
+                <select
+                  value={form?.category_id || ""}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const selectedCategory = categories.find(
+                      (c) => String(c.id) === selectedId
+                    );
+                    onFieldChange("category_id", selectedId);
+                    if (selectedCategory) {
+                      onFieldChange("category_name", selectedCategory.name);
+                    }
+                  }}
+                  disabled={loading || categories.length === 0}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    appearance: "none",
+                  }}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Qoldiq
+                </label>
+                <input
+                  type="number"
+                  value={form?.quantity || ""}
+                  onChange={(e) => onFieldChange("quantity", e.target.value)}
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    MozAppearance: "textfield",
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onWheel={(e) => e.target.blur()}
+                  onKeyDown={(e) =>
+                    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+                    e.preventDefault()
+                  }
+                />
+              </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Narx
+                </label>
+                <input
+                  type="number"
+                  value={form?.price_per_quantity || ""}
+                  onChange={(e) =>
+                    onFieldChange("price_per_quantity", e.target.value)
+                  }
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    MozAppearance: "textfield",
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onWheel={(e) => e.target.blur()}
+                  onKeyDown={(e) =>
+                    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+                    e.preventDefault()
+                  }
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div
