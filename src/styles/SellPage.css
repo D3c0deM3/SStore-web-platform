@@ -1,14 +1,7 @@
 /* SellPage styles */
 
-.sell-page-container.products-page {
-  /* Container styles */
-}
-
 .sell-page-content-wrapper {
   padding-top: 12px;
-}
-
-.sell-page-main-content {
 }
 
 .sell-page-header-section {
@@ -23,9 +16,6 @@
 
 .sell-page-search-container {
   margin-bottom: 16px;
-}
-
-.sell-page-search-input {
 }
 
 .sell-page-product-selection {
