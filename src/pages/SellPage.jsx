@@ -1,147 +1,80 @@
 import React, { useEffect, useState } from "react";
-import ProfileSection from "../components/ProfileSection";
 import "../styles/ProductsPage.css";
+import "../styles/SellPage.css";
 import deleteIcon from "../assets/dashboard/delete.svg";
 
 const SellPage = () => {
-  const [user, setUser] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Meals");
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Pizza",
-      price: 50000,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&h=150&fit=crop&crop=center",
-    },
-    {
-      id: 2,
-      name: "Pizza",
-      price: 50000,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&h=150&fit=crop&crop=center",
-    },
-    {
-      id: 3,
-      name: "Pizza",
-      price: 50000,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&h=150&fit=crop&crop=center",
-    },
-    {
-      id: 4,
-      name: "Pizza",
-      price: 50000,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&h=150&fit=crop&crop=center",
-    },
-  ]);
+  const [cartItems, setCartItems] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  // Detect theme (light/dark) from html or body class
+  const [isLightTheme, setIsLightTheme] = useState(false);
 
-  const products = [
-    {
-      id: 1,
-      name: "Pizza",
-      price: 50000,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 2,
-      name: "Burger",
-      price: 27000,
-      image:
-        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 3,
-      name: "Lavash",
-      price: 25000,
-      image:
-        "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 4,
-      name: "Chicken Burger",
-      price: 29000,
-      image:
-        "https://images.unsplash.com/photo-1606755962773-d324e9ebd3e9?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 5,
-      name: "Pizza",
-      price: 50000,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 6,
-      name: "Burger",
-      price: 27000,
-      image:
-        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 7,
-      name: "Lavash",
-      price: 25000,
-      image:
-        "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 8,
-      name: "Chicken Burger",
-      price: 29000,
-      image:
-        "https://images.unsplash.com/photo-1606755962773-d324e9ebd3e9?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 9,
-      name: "Pizza",
-      price: 50000,
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 10,
-      name: "Burger",
-      price: 27000,
-      image:
-        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 11,
-      name: "Lavash",
-      price: 25000,
-      image:
-        "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=200&h=200&fit=crop&crop=center",
-    },
-    {
-      id: 12,
-      name: "Chicken Burger",
-      price: 29000,
-      image:
-        "https://images.unsplash.com/photo-1606755962773-d324e9ebd3e9?w=200&h=200&fit=crop&crop=center",
-    },
-  ];
-
-  const categories = ["Meals", "Drinks", "Chicken", "Drinks", "Meals"];
-
+  // Load cart from localStorage on mount (before any other useEffect that might overwrite it)
   useEffect(() => {
-    const market = JSON.parse(localStorage.getItem("market"));
-    if (market) {
-      setUser({
-        name: market.market_name,
-        phone: market.phone_number,
-        plan: market.plan,
-        profileImage: market.profile_picture,
-      });
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
     }
   }, []);
+
+  useEffect(() => {
+    // Fetch products/categories from API on mount
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const baseUrl =
+          process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL;
+        const url = `${baseUrl}/api/categories/products/`;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("API error:", response.status, text);
+          return;
+        }
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          console.log("/api/categories/products/ response:", data);
+          // Extract categories and products
+          const categoryNames = Object.keys(data);
+          setCategories(categoryNames);
+          // Flatten products for all categories, but keep category info
+          let allProducts = [];
+          categoryNames.forEach((cat) => {
+            data[cat].forEach((item) => {
+              allProducts.push({ ...item, category: cat });
+            });
+          });
+          setProducts(allProducts);
+          // Optionally set default activeCategory to first non-empty category
+          const firstNonEmpty = categoryNames.find(
+            (cat) => data[cat] && data[cat].length > 0
+          );
+          if (firstNonEmpty) setActiveCategory(firstNonEmpty);
+        } else {
+          const text = await response.text();
+          console.warn("Non-JSON response:", text);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   // Example search handler (replace with real logic as needed)
   const handleSearchChange = (e) => {
@@ -150,17 +83,28 @@ const SellPage = () => {
   };
 
   const addToCart = (product) => {
-    const existingItem = cartItems.find((item) => item.id === product.id);
+    // Use price_per_quantity if available, fallback to price, and parse as number
+    const price = Number(product.price_per_quantity || product.price);
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      price, // always a number
+      image: product.image
+        ? `https://res.cloudinary.com/bnf404/${product.image}`
+        : "",
+      quantity: 1,
+    };
+    const existingItem = cartItems.find((item) => item.id === cartProduct.id);
     if (existingItem) {
       setCartItems(
         cartItems.map((item) =>
-          item.id === product.id
+          item.id === cartProduct.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       );
     } else {
-      setCartItems([...cartItems, { ...product, quantity: 1 }]);
+      setCartItems([...cartItems, cartProduct]);
     }
   };
 
@@ -197,21 +141,70 @@ const SellPage = () => {
     );
   };
 
+  // Detect theme (light/dark) from html or body class
+  useEffect(() => {
+    const checkTheme = () => {
+      const htmlClass = document.documentElement.className;
+      setIsLightTheme(htmlClass.includes("light-theme"));
+    };
+    checkTheme();
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="sell-page-container products-page">
+    <div
+      className="sell-page-container products-page"
+      style={{ display: "flex", height: "100vh", overflow: "hidden" }}
+    >
+      {/* Sidebar would be here if present */}
       <div
-        className="content-wrapper no-right-column"
-        style={{ paddingTop: 12 }}
+        style={{
+          flex: 2,
+          minWidth: 0,
+          height: "100vh",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          scrollbarWidth: "none", // Hide Firefox scrollbar
+          msOverflowStyle: "none", // Hide IE/Edge scrollbar
+        }}
       >
-        <div className="main-content">
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+          }}
+        >
           <div
-            className="header-section"
-            style={{ alignItems: "flex-start", marginBottom: 8 }}
+            className="sell-page-header-section header-section"
+            style={{
+              alignItems: "flex-start",
+              marginBottom: 8,
+            }}
           >
-            <h1 style={{ marginBottom: 0, fontSize: 32 }}>Sotuv</h1>
-            <ProfileSection user={user} />
+            <h1
+              className="sell-page-title"
+              style={{
+                marginBottom: 0,
+                fontSize: 32,
+              }}
+            >
+              Sotuv
+            </h1>
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div
+            className="sell-page-search-container"
+            style={{
+              marginBottom: 16,
+            }}
+          >
             <div className="search-container">
               <span className="search-icon" />
               <input
@@ -219,399 +212,312 @@ const SellPage = () => {
                 placeholder="Qidiruv..."
                 value={searchTerm}
                 onChange={handleSearchChange}
+                className="sell-page-search-input"
               />
             </div>
           </div>
-          <div style={{ display: "flex", flex: 1, gap: 24 }}>
-            {/* Product selection area */}
+          <div className="sell-page-product-selection">
+            <div className="sell-page-category-bar">
+              {categories.map((category, index) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`sell-page-category-btn${
+                    activeCategory === category ? " active" : ""
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
             <div
-              style={{
-                flex: 2,
-                background: "#232735",
-                borderRadius: 16,
-                padding: 24,
-                display: "flex",
-                flexDirection: "column",
-              }}
+              className="sell-page-products-grid"
+              style={
+                {
+                  /* ...existing styles... */
+                }
+              }
             >
-              <div
-                style={{
-                  display: "flex",
-                  gap: 4,
-                  marginBottom: 24,
-                  background: "#393e4c",
-                  borderRadius: 12,
-                  padding: 4,
-                }}
-              >
-                {categories.map((category, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveCategory(category)}
-                    style={{
-                      flex: 1,
-                      background:
-                        activeCategory === category && index === 0
-                          ? "#4c7273"
-                          : "#393e4c",
-                      color:
-                        activeCategory === category && index === 0
-                          ? "#fff"
-                          : "#bfc9d1",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: 12,
-                      fontWeight: 700,
-                      fontSize: 16,
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: 16,
-                  overflowY: "auto",
-                  flex: 1,
-                }}
-              >
-                {products.map((product) => (
+              {products
+                .filter((product) => product.category === activeCategory)
+                .map((product) => (
                   <div
                     key={product.id}
                     onClick={() => addToCart(product)}
-                    style={{
-                      background: "#fff",
-                      borderRadius: 16,
-                      padding: 16,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-4px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 8px 24px rgba(0,0,0,0.15)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 8px rgba(0,0,0,0.1)";
-                    }}
+                    className="sell-page-product-card product-card"
                   >
                     <img
-                      src={product.image}
+                      src={`https://res.cloudinary.com/bnf404/${product.image}`}
                       alt={product.name}
-                      style={{
-                        width: 90,
-                        height: 90,
-                        objectFit: "cover",
-                        borderRadius: 12,
-                        marginBottom: 12,
-                      }}
+                      className="sell-page-product-img"
                     />
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 18,
-                        color: "#232735",
-                        marginBottom: 4,
-                        textAlign: "center",
-                      }}
-                    >
-                      {product.name}
-                    </div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 16,
-                        color: "#4c7273",
-                      }}
-                    >
-                      {formatPrice(product.price)}
+                    <div className="sell-page-product-name">{product.name}</div>
+                    <div className="sell-page-product-price">
+                      {formatPrice(
+                        Number(product.price_per_quantity || product.price)
+                      )}
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-            {/* Cart area */}
-            <div
-              style={{
-                flex: 1,
-                background: "#2e3342",
-                borderRadius: 16,
-                padding: 24,
-                display: "flex",
-                flexDirection: "column",
-                minWidth: 320,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 24,
-                }}
-              >
-                <h2
-                  style={{
-                    color: "#fff",
-                    fontSize: 28,
-                    fontWeight: 700,
-                    margin: 0,
-                  }}
-                >
-                  Xarid
-                </h2>
-                <button
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: 28,
-                    cursor: "pointer",
-                  }}
-                >
-                  &times;
-                </button>
-              </div>
-              <div style={{ flex: 1, overflowY: "auto", marginBottom: 24 }}>
-                {cartItems.map((item, index) => (
-                  <div
-                    key={`${item.id}-${index}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      background: "#232735",
-                      borderRadius: 12,
-                      padding: 12,
-                      marginBottom: 16,
-                    }}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                        marginRight: 12,
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: 16,
-                          color: "#fff",
-                        }}
-                      >
-                        {item.name}
-                      </div>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: 14,
-                          color: "#4c7273",
-                        }}
-                      >
-                        {formatPrice(item.price)}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          decreaseQuantity(item.id);
-                        }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#bfc9d1",
-                          fontSize: 20,
-                          cursor: "pointer",
-                          padding: 4,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        aria-label="Decrease quantity"
-                      >
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            x="4"
-                            y="8.25"
-                            width="10"
-                            height="1.5"
-                            rx="0.75"
-                            fill="#bfc9d1"
-                          />
-                        </svg>
-                      </button>
-                      <div
-                        style={{
-                          background: "#393e4c",
-                          borderRadius: 6,
-                          padding: "4px 8px",
-                          minWidth: 28,
-                          textAlign: "center",
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: "#bfc9d1",
-                            fontWeight: 700,
-                            fontSize: 16,
-                          }}
-                        >
-                          {item.quantity}
-                        </span>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          increaseQuantity(item.id);
-                        }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#bfc9d1",
-                          fontSize: 20,
-                          cursor: "pointer",
-                          padding: 4,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        aria-label="Increase quantity"
-                      >
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            x="8.25"
-                            y="4"
-                            width="1.5"
-                            height="10"
-                            rx="0.75"
-                            fill="#bfc9d1"
-                          />
-                          <rect
-                            x="4"
-                            y="8.25"
-                            width="10"
-                            height="1.5"
-                            rx="0.75"
-                            fill="#bfc9d1"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFromCart(item.id);
-                        }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#bfc9d1",
-                          fontSize: 20,
-                          cursor: "pointer",
-                          padding: 4,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        aria-label="Remove item"
-                      >
-                        <img
-                          src={deleteIcon}
-                          alt="Remove"
-                          style={{ width: 20, height: 20 }}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 24,
-                }}
-              >
-                <span
-                  style={{
-                    color: "#bfc9d1",
-                    fontWeight: 700,
-                    fontSize: 18,
-                  }}
-                >
-                  Total :
-                </span>
-                <span
-                  style={{
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: 20,
-                  }}
-                >
-                  {formatPrice(getTotalPrice())}
-                </span>
-              </div>
-              <button
-                style={{
-                  background: "#4c7273",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "16px 0",
-                  fontWeight: 700,
-                  fontSize: 20,
-                  width: "100%",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease",
-                }}
-                onMouseEnter={(e) =>
-                  (e.target.style.backgroundColor = "#5a8384")
-                }
-                onMouseLeave={(e) =>
-                  (e.target.style.backgroundColor = "#4c7273")
-                }
-              >
-                Pay
-              </button>
             </div>
           </div>
         </div>
       </div>
+      {/* Cart area - fixed, not scrollable, like sidebar */}
+      <div
+        className="sell-page-cart-area"
+        style={{
+          flex: "0 0 360px",
+          minWidth: 260,
+          maxWidth: 360,
+          height: "100vh",
+          alignSelf: "stretch",
+          position: "sticky",
+          top: 0,
+          display: "flex",
+          flexDirection: "column",
+          background: isLightTheme ? "var(--color-bg-secondary)" : "#2e3342",
+          borderRadius: 0,
+          padding: 24,
+          boxSizing: "border-box",
+          overflow: "hidden",
+          marginLeft: 32,
+          boxShadow: isLightTheme ? "0 4px 6px var(--color-shadow)" : "none",
+        }}
+      >
+        <div className="sell-page-cart-header">
+          <h2
+            className="sell-page-cart-title"
+            style={{
+              color: isLightTheme ? "var(--color-text-primary)" : "#fff",
+              transition: "color 0.2s",
+            }}
+          >
+            Xarid
+          </h2>
+          {/* Removed close (X) button */}
+        </div>
+        <div
+          className="sell-page-cart-list"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            minHeight: 0,
+            display: cartItems.length === 0 ? "flex" : undefined,
+            flexDirection: cartItems.length === 0 ? "column" : undefined,
+            alignItems: cartItems.length === 0 ? "center" : undefined,
+            justifyContent: cartItems.length === 0 ? "center" : undefined,
+          }}
+        >
+          {cartItems.length === 0 ? (
+            <div className="sell-page-cart-empty" style={{ width: "100%" }}>
+              <svg
+                width="56"
+                height="56"
+                viewBox="0 0 56 56"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ display: "block", margin: "0 auto 12px auto" }}
+              >
+                <rect
+                  x="8"
+                  y="16"
+                  width="40"
+                  height="28"
+                  rx="6"
+                  fill="#e5e7eb"
+                />
+                <rect
+                  x="16"
+                  y="8"
+                  width="24"
+                  height="12"
+                  rx="6"
+                  fill="#cbd5e1"
+                />
+                <path
+                  d="M20 36h16"
+                  stroke="#bfc9d1"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <circle cx="20" cy="44" r="3" fill="#bfc9d1" />
+                <circle cx="36" cy="44" r="3" fill="#bfc9d1" />
+              </svg>
+              <div
+                style={{
+                  textAlign: "center",
+                  color: "var(--color-text-secondary)",
+                  fontSize: 16,
+                  marginBottom: 8,
+                }}
+              >
+                Savatcha hozircha bo'sh
+              </div>
+              <div
+                style={{
+                  textAlign: "center",
+                  color: "var(--color-text-muted)",
+                  fontSize: 14,
+                }}
+              >
+                Mahsulot qo'shish uchun ro'yxatdan tanlang
+              </div>
+            </div>
+          ) : (
+            cartItems.map((item, index) => (
+              <div key={`${item.id}-${index}`} className="sell-page-cart-item">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="sell-page-cart-item-img"
+                />
+                <div
+                  className="sell-page-cart-item-info"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    color: isLightTheme ? "var(--color-text-primary)" : "#fff",
+                    transition: "color 0.2s",
+                  }}
+                >
+                  <div
+                    className="sell-page-cart-item-name"
+                    style={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      minWidth: 0,
+                      width: "100%",
+                      display: "block",
+                      fontWeight: 700,
+                      fontSize: 18,
+                    }}
+                  >
+                    {item.name}
+                  </div>
+                  <div className="sell-page-cart-item-price">
+                    {formatPrice(item.price)}
+                  </div>
+                </div>
+                <div className="sell-page-cart-item-controls">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      decreaseQuantity(item.id);
+                    }}
+                    className="sell-page-cart-qty-btn"
+                    aria-label="Decrease quantity"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="4"
+                        y="8.25"
+                        width="10"
+                        height="1.5"
+                        rx="0.75"
+                        fill="#bfc9d1"
+                      />
+                    </svg>
+                  </button>
+                  <div className="sell-page-cart-qty">
+                    <span className="sell-page-cart-qty-value">
+                      {item.quantity}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      increaseQuantity(item.id);
+                    }}
+                    className="sell-page-cart-qty-btn"
+                    aria-label="Increase quantity"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="8.25"
+                        y="4"
+                        width="1.5"
+                        height="10"
+                        rx="0.75"
+                        fill="#bfc9dd1"
+                      />
+                      <rect
+                        x="4"
+                        y="8.25"
+                        width="10"
+                        height="1.5"
+                        rx="0.75"
+                        fill="#bfc9d1"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromCart(item.id);
+                    }}
+                    className="sell-page-cart-remove-btn"
+                    aria-label="Remove item"
+                  >
+                    <img
+                      src={deleteIcon}
+                      alt="Remove"
+                      style={{ width: 20, height: 20 }}
+                    />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="sell-page-cart-total-row">
+          <span
+            className="sell-page-cart-total-label"
+            style={{
+              color: isLightTheme ? "var(--color-text-primary)" : undefined,
+            }}
+          >
+            Total :
+          </span>
+          <span
+            className="sell-page-cart-total-value"
+            style={{
+              color: isLightTheme ? "var(--color-text-primary)" : undefined,
+              fontWeight: 700,
+            }}
+          >
+            {formatPrice(getTotalPrice())}
+          </span>
+        </div>
+        <button
+          className="sell-page-cart-pay-btn"
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#5a8384")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#4c7273")}
+        >
+          Pay
+        </button>
+      </div>
+      <style>{`
+        .sell-page-container.products-page > div[style*='overflowY: auto']::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };

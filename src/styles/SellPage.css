@@ -1,0 +1,282 @@
+/* SellPage styles */
+
+.sell-page-container.products-page {
+  /* Container styles */
+}
+
+.sell-page-content-wrapper {
+  padding-top: 12px;
+}
+
+.sell-page-main-content {
+}
+
+.sell-page-header-section {
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.sell-page-title {
+  margin-bottom: 0;
+  font-size: 32px;
+}
+
+.sell-page-search-container {
+  margin-bottom: 16px;
+}
+
+.sell-page-search-input {
+}
+
+.sell-page-product-selection {
+  flex: 2;
+  background: #232735;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sell-page-category-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: #393e4c;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.sell-page-category-btn {
+  flex: 1;
+  background: #393e4c;
+  color: #bfc9d1;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sell-page-category-btn.active {
+  background: #4c7273;
+  color: #fff;
+}
+
+.sell-page-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 18px;
+  width: 100%;
+  margin-top: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sell-page-product-card {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+  padding: 18px 14px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  margin-bottom: 18px;
+  min-width: 0;
+}
+
+.sell-page-product-card:hover {
+  background: var(--color-border);
+}
+
+.sell-page-product-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  border: 1.5px solid #e0e0e0;
+  margin-bottom: 10px;
+}
+
+.sell-page-product-name {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  color: inherit;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.sell-page-product-price {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.sell-page-cart-area {
+  flex: 1;
+  background: #2e3342;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+}
+
+.sell-page-cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sell-page-cart-title {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.sell-page-cart-close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.sell-page-cart-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 24px;
+}
+
+.sell-page-cart-item {
+  display: flex;
+  align-items: center;
+  background: #232735;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.sell-page-cart-item-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 12px;
+}
+
+.sell-page-cart-item-info {
+  flex: 1;
+}
+
+.sell-page-cart-item-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+}
+
+.sell-page-cart-item-price {
+  font-weight: 700;
+  font-size: 14px;
+  color: #4c7273;
+}
+
+.sell-page-cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sell-page-cart-qty-btn {
+  background: none;
+  border: none;
+  color: #bfc9d1;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sell-page-cart-qty {
+  background: #393e4c;
+  border-radius: 6px;
+  padding: 4px 8px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.sell-page-cart-qty-value {
+  color: #bfc9d1;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.sell-page-cart-remove-btn {
+  background: none;
+  border: none;
+  color: #bfc9d1;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sell-page-cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sell-page-cart-total-label {
+  color: #bfc9d1;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.sell-page-cart-total-value {
+  color: #fff;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.sell-page-cart-pay-btn {
+  background: #4c7273;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 0;
+  font-weight: 700;
+  font-size: 20px;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sell-page-cart-pay-btn:hover {
+  background-color: #5a8384;
+}
+
+/* Light theme override for SellPage product card */
+.light-theme .sell-page-product-card.product-card {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  box-shadow: 0 4px 12px var(--color-shadow);
+}
