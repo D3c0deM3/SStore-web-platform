@@ -1,5 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import SotishIcon from "../assets/dashboard/sotish.svg";
 
 const Sidebar = ({ user, getPlanIconClass }) => {
   const location = useLocation();
@@ -31,6 +32,23 @@ const Sidebar = ({ user, getPlanIconClass }) => {
           >
             <span className="icon products-icon" />
             Mahsulotlar
+          </li>
+          <li
+            className={location.pathname === "/sotish" ? "active" : ""}
+            onClick={() => navigate("/sotish")}
+          >
+            <img
+              src={SotishIcon}
+              alt="Sotish"
+              className="icon sotish-icon"
+              style={{
+                width: 20,
+                height: 20,
+                marginRight: 10,
+                verticalAlign: "middle",
+              }}
+            />
+            Sotish
           </li>
           <li
             className={location.pathname === "/kalkulyator" ? "active" : ""}

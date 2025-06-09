@@ -374,6 +374,40 @@ const AddProductModal = ({
                   pattern="[0-9]*"
                 />
               </div>
+              <div style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Miqdor turi
+                </label>
+                <select
+                  value={form.quantity_type || "kg"}
+                  onChange={(e) =>
+                    onFieldChange("quantity_type", e.target.value)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 15,
+                    background: "#f5f6fa",
+                    color: "#222",
+                    marginTop: 2,
+                  }}
+                >
+                  <option value="kg">kg</option>
+                  <option value="dona">dona</option>
+                  <option value="metr">metr</option>
+                  <option value="litr">litr</option>
+                </select>
+              </div>
               <div style={{ textAlign: "left", gridColumn: "1 / span 2" }}>
                 <label
                   style={{

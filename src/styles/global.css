@@ -27,3 +27,14 @@ a {
 
 /* Import Poppins font */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+.sotish-icon {
+  /* Default: green like other icons */
+  fill: #4c7273;
+  transition: fill 0.2s;
+}
+
+body.dark .sotish-icon,
+[data-theme="dark"] .sotish-icon {
+  fill: #fff;
+}

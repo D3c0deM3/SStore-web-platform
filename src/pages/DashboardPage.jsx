@@ -696,7 +696,35 @@ const DashboardPage = () => {
                 {productsByPrice.length > 0 ? (
                   productsByPrice.map((product) => (
                     <tr key={product.id}>
-                      <td>{product.name}</td>
+                      <td
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        {(product.image_url || product.image) && (
+                          <img
+                            src={
+                              product.image_url
+                                ? product.image_url
+                                : product.image
+                                ? `https://res.cloudinary.com/bnf404/${product.image}`
+                                : undefined
+                            }
+                            alt={product.name}
+                            className="product-table-thumb"
+                          />
+                        )}
+                        <span
+                          style={{
+                            marginLeft:
+                              product.image_url || product.image ? 14 : 0,
+                          }}
+                        >
+                          {product.name}
+                        </span>
+                      </td>
                       <td>
                         {(product.total_subtracted || 0).toLocaleString()}{" "}
                         {product.quantity_type}

@@ -577,6 +577,44 @@ const EditProductModal = ({
                   }
                 />
               </div>
+              <div className="form-group" style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Miqdor turi
+                </label>
+                <select
+                  value={form?.quantity_type || "kg"}
+                  onChange={(e) =>
+                    onFieldChange("quantity_type", e.target.value)
+                  }
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 16,
+                    background: "var(--modal-input-bg, #fff)",
+                    color: "#222",
+                    outline: "none",
+                    transition: "border 0.18s",
+                    marginTop: 2,
+                    appearance: "none",
+                  }}
+                >
+                  <option value="kg">kg</option>
+                  <option value="dona">dona</option>
+                  <option value="metr">metr</option>
+                  <option value="litr">litr</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

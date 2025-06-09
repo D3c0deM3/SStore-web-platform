@@ -7,6 +7,7 @@ import DashboardLayout from "./components/DashboardLayout.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import Dashboardpage from "./pages/DashboardPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
+import SellPage from "./pages/SellPage.jsx";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         >
           <Route path="dashboard" element={<Dashboardpage />} />
           <Route path="mahsulotlar" element={<ProductsPage />} />
+          <Route path="sotish" element={<SellPage />} />
           {/* Add other dashboard-related routes here */}
         </Route>
       </Routes>

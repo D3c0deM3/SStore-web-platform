@@ -215,10 +215,6 @@ const ProductsPage = () => {
         );
         formData.append("status", addProductForm.status);
         formData.append("image", addProductForm.localImageFile);
-        // Debug: log FormData keys and values
-        for (let pair of formData.entries()) {
-          console.log(`[ProductsPage] FormData: ${pair[0]} =`, pair[1]);
-        }
         response = await fetch(`${apiBaseUrl}/api/products/create/`, {
           method: "POST",
           headers: {
@@ -238,8 +234,6 @@ const ProductsPage = () => {
           ).toFixed(2),
           status: addProductForm.status,
         };
-        // Debug: log JSON payload
-        console.log("[ProductsPage] JSON payload:", payload);
         response = await fetch(`${apiBaseUrl}/api/products/create/`, {
           method: "POST",
           headers: {
@@ -592,15 +586,7 @@ const ProductsPage = () => {
             const filename = urlParts[urlParts.length - 1] || "image.jpg";
             const file = new File([blob], filename, { type: blob.type });
             formData.append("image", file);
-            console.log(
-              "[ProductsPage] No image change, sending current image_url as File:",
-              file
-            );
           } catch (err) {
-            console.warn(
-              "[ProductsPage] Failed to fetch image_url as File, sending as string:",
-              editModal.form.image_url
-            );
             formData.append("image", editModal.form.image_url);
           }
         } else {
@@ -608,10 +594,16 @@ const ProductsPage = () => {
         }
       }
 
-      // Debug: log FormData keys and values
+      // Debug: log raw FormData as an object
+      const rawFormData = {};
       for (let pair of formData.entries()) {
-        console.log(`[ProductsPage] FormData: ${pair[0]} =`, pair[1]);
+        rawFormData[pair[0]] = pair[1];
       }
+      // For files, log their name/type, not the object
+      if (rawFormData.image instanceof File) {
+        rawFormData.image = `[File] name: ${rawFormData.image.name}, type: ${rawFormData.image.type}`;
+      }
+
       const res = await fetch(
         `${apiBaseUrl}/api/products/update/${editModal.form.id}/`,
         {
