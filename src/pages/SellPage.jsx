@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../styles/ProductsPage.css";
 import "../styles/SellPage.css";
 import deleteIcon from "../assets/dashboard/delete.svg";
@@ -15,6 +15,18 @@ const SellPage = () => {
   const [loading, setLoading] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [showQarzModal, setShowQarzModal] = useState(false);
+  const [debtors, setDebtors] = useState([]);
+  const [debtorSearch, setDebtorSearch] = useState("");
+  const [selectedDebtor, setSelectedDebtor] = useState(null);
+  const [debtorName, setDebtorName] = useState("");
+  const [debtorPhone, setDebtorPhone] = useState("");
+  const [qarzLoading, setQarzLoading] = useState(false);
+  const [qarzError, setQarzError] = useState("");
+  const debtorInputRef = useRef(null);
+  const [debtorDropdownStyle, setDebtorDropdownStyle] = useState({});
+  const [showDebtorDropdown, setShowDebtorDropdown] = useState(false);
 
   // Load cart from localStorage on mount (before any other useEffect that might overwrite it)
   useEffect(() => {
@@ -227,6 +239,102 @@ const SellPage = () => {
     }
     setLoading(false);
   };
+
+  // Fetch debtors when modal opens
+  useEffect(() => {
+    if (showQarzModal) {
+      const fetchDebtors = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const baseUrl =
+            process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL;
+          const url = `${baseUrl}/api/debtors/`;
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${token}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setDebtors(data);
+          } else {
+            setDebtors([]);
+          }
+        } catch {
+          setDebtors([]);
+        }
+      };
+      fetchDebtors();
+      setDebtorSearch("");
+      setSelectedDebtor(null);
+      setDebtorName("");
+      setDebtorPhone("");
+      setQarzError("");
+    }
+  }, [showQarzModal]);
+
+  // When selectedDebtor changes, autofill fields
+  useEffect(() => {
+    if (selectedDebtor) {
+      setDebtorName(selectedDebtor.name);
+      setDebtorPhone(selectedDebtor.phone);
+    }
+  }, [selectedDebtor]);
+
+  const handleQarz = async () => {
+    if (!debtorName.trim() || !debtorPhone.trim()) {
+      setQarzError("Ism va telefon raqami to'ldirilishi shart.");
+      return;
+    }
+    setQarzLoading(true);
+    setQarzError("");
+    const token = localStorage.getItem("token");
+    const baseUrl =
+      process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL;
+    const url = `${baseUrl}/api/sell/`;
+    const sells = cartItems.map((item) => ({
+      product_id: item.id,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify({
+          sells,
+          debtor_name: debtorName,
+          debtor_phone: debtorPhone,
+        }),
+      });
+      if (response.status === 200) {
+        setShowSuccess(true);
+        setCartItems([]);
+        setShowQarzModal(false);
+        setTimeout(() => setShowSuccess(false), 1500);
+      } else {
+        setQarzError("Xatolik yuz berdi. Qayta urinib ko'ring.");
+      }
+    } catch {
+      setQarzError("Tarmoq xatosi yoki server javob bermadi.");
+    }
+    setQarzLoading(false);
+  };
+
+  // Update debtor dropdown style on render and when dependencies change
+  useEffect(() => {
+    if (debtorInputRef.current) {
+      const rect = debtorInputRef.current.getBoundingClientRect();
+      setDebtorDropdownStyle({
+        width: rect.width,
+      });
+    }
+  }, [showDebtorDropdown, debtorSearch]);
 
   return (
     <div
@@ -651,18 +759,32 @@ const SellPage = () => {
             className="sell-page-cart-qarz-btn"
             style={{
               flex: 1,
-              background: "#2563eb",
+              background: cartItems.length === 0 ? "#7a8e8e" : "#2563eb",
               color: "#fff",
               border: "none",
               borderRadius: 12,
               padding: "16px 0",
               fontWeight: 700,
               fontSize: 20,
-              cursor: "pointer",
+              cursor: cartItems.length === 0 ? "not-allowed" : "pointer",
               transition: "background-color 0.2s ease",
+              opacity: cartItems.length === 0 ? 0.7 : 1,
+              position: "relative",
             }}
-            onMouseEnter={(e) => (e.target.style.background = "#1d4ed8")}
-            onMouseLeave={(e) => (e.target.style.background = "#2563eb")}
+            disabled={cartItems.length === 0}
+            onMouseEnter={
+              cartItems.length === 0
+                ? undefined
+                : (e) => (e.target.style.background = "#1d4ed8")
+            }
+            onMouseLeave={
+              cartItems.length === 0
+                ? undefined
+                : (e) => (e.target.style.background = "#2563eb")
+            }
+            onClick={
+              cartItems.length === 0 ? undefined : () => setShowQarzModal(true)
+            }
           >
             Qarz
           </button>
@@ -739,6 +861,34 @@ const SellPage = () => {
         }
         .sell-error-close-btn:hover {
           background: #dc2626;
+        }
+        .qarz-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 10000;
+          background: rgba(0, 0, 0, 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .qarz-modal {
+          background: var(--color-bg-primary);
+          border-radius: 16px;
+          box-shadow: 0 8px 32px var(--color-shadow);
+          padding: 32px;
+          min-width: 340px;
+          max-width: 400px;
+          width: 100%;
+        }
+        @keyframes dropdown-fade-in {
+          0% { opacity: 0; transform: translateY(-10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .qarz-debtor-dropdown {
+          animation: dropdown-fade-in 0.18s cubic-bezier(0.4,2,0.6,1);
         }
       `}</style>
       {showSuccess && (
@@ -838,6 +988,247 @@ const SellPage = () => {
           >
             Yopish
           </button>
+        </div>
+      )}
+      {showQarzModal && (
+        <div className="qarz-modal-overlay">
+          <div className="qarz-modal">
+            <h2
+              style={{
+                marginTop: 0,
+                marginBottom: 18,
+                color: isLightTheme ? "var(--color-text-primary)" : "#fff",
+              }}
+            >
+              Qarzga sotish
+            </h2>
+            <div style={{ marginBottom: 18 }}>
+              <label
+                style={{
+                  fontWeight: 600,
+                  color: isLightTheme ? "var(--color-text-primary)" : "#fff",
+                }}
+              >
+                Qarzdor tanlash
+              </label>
+              <div style={{ position: "relative" }}>
+                <input
+                  ref={debtorInputRef}
+                  type="text"
+                  placeholder="Ism bo'yicha qidiring..."
+                  value={debtorSearch}
+                  onChange={(e) => {
+                    setDebtorSearch(e.target.value);
+                    setSelectedDebtor(null);
+                    setDebtorName("");
+                    setDebtorPhone("");
+                    setShowDebtorDropdown(true);
+                  }}
+                  onFocus={() => setShowDebtorDropdown(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowDebtorDropdown(false), 120)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: 10,
+                    marginTop: 6,
+                    marginBottom: 8,
+                    borderRadius: 8,
+                    border: "1px solid #cbd5e1",
+                    fontSize: 16,
+                    position: "relative",
+                    zIndex: 2,
+                  }}
+                />
+                {showDebtorDropdown && debtors.length > 0 && (
+                  <div
+                    className="qarz-debtor-dropdown"
+                    style={{
+                      ...debtorDropdownStyle,
+                      position: "absolute",
+                      left: 0,
+                      top: debtorInputRef.current
+                        ? debtorInputRef.current.offsetTop +
+                          debtorInputRef.current.offsetHeight
+                        : 44,
+                      background: isLightTheme ? "#fff" : "#23273a",
+                      maxHeight: 176,
+                      overflowY: "auto",
+                      borderRadius: 8,
+                      boxShadow: "0 2px 8px #0001",
+                      zIndex: 10001,
+                      animation:
+                        "dropdown-fade-in 0.18s cubic-bezier(0.4,2,0.6,1)",
+                    }}
+                  >
+                    {debtors
+                      .filter((d) =>
+                        d.name
+                          .toLowerCase()
+                          .includes(debtorSearch.toLowerCase())
+                      )
+                      .map((d) => (
+                        <div
+                          key={d.id}
+                          style={{
+                            padding: "10px 12px",
+                            minHeight: 44,
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "pointer",
+                            borderBottom: "1px solid #eee",
+                            color: isLightTheme ? "#222" : "#fff",
+                            background:
+                              debtorSearch === d.name
+                                ? isLightTheme
+                                  ? "#f3f4f6"
+                                  : "#374151"
+                                : "inherit",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseDown={() => {
+                            setSelectedDebtor(d);
+                            setDebtorSearch(d.name);
+                            setDebtorName(d.name);
+                            setDebtorPhone(d.phone);
+                            setShowDebtorDropdown(false);
+                          }}
+                        >
+                          {d.name}{" "}
+                          <span
+                            style={{
+                              color: "#888",
+                              fontSize: 13,
+                              marginLeft: 8,
+                            }}
+                          >{`${d.phone}`}</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label
+                style={{
+                  fontWeight: 600,
+                  color: isLightTheme ? "var(--color-text-primary)" : "#fff",
+                }}
+              >
+                To'liq ism
+              </label>
+              <input
+                type="text"
+                value={debtorName}
+                onChange={(e) => setDebtorName(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: 10,
+                  marginTop: 6,
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 16,
+                }}
+                placeholder="Ism"
+              />
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <label
+                style={{
+                  fontWeight: 600,
+                  color: isLightTheme ? "var(--color-text-primary)" : "#fff",
+                }}
+              >
+                Telefon raqam
+              </label>
+              <input
+                type="text"
+                value={
+                  debtorPhone.startsWith("+998")
+                    ? debtorPhone
+                    : `+998${debtorPhone.replace(/^\+?998?/, "")}`
+                }
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // Always keep +998 at the start
+                  if (!val.startsWith("+998"))
+                    val =
+                      "+998" + val.replace(/[^0-9]/g, "").replace(/^998/, "");
+                  // Only allow up to 9 digits after +998
+                  val =
+                    "+998" +
+                    val
+                      .slice(4)
+                      .replace(/[^0-9]/g, "")
+                      .slice(0, 9);
+                  setDebtorPhone(val);
+                }}
+                style={{
+                  width: "100%",
+                  padding: 10,
+                  marginTop: 6,
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 16,
+                }}
+                placeholder="Telefon raqam"
+                maxLength={13}
+              />
+            </div>
+            {qarzError && (
+              <div
+                style={{
+                  color: "#ef4444",
+                  marginBottom: 10,
+                  fontWeight: 600,
+                }}
+              >
+                {qarzError}
+              </div>
+            )}
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                marginTop: 8,
+              }}
+            >
+              <button
+                onClick={handleQarz}
+                disabled={qarzLoading}
+                style={{
+                  flex: 1,
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "12px 0",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  cursor: qarzLoading ? "not-allowed" : "pointer",
+                  opacity: qarzLoading ? 0.7 : 1,
+                }}
+              >
+                {qarzLoading ? "Yuborilmoqda..." : "Tasdiqlash"}
+              </button>
+              <button
+                onClick={() => setShowQarzModal(false)}
+                style={{
+                  flex: 1,
+                  background: "#e5e7eb",
+                  color: "#222",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "12px 0",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  cursor: "pointer",
+                }}
+              >
+                Bekor qilish
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
