@@ -47,6 +47,7 @@ const DashboardPage = () => {
   const [profits, setProfits] = useState([]);
   const [current_months, setMonth] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Profile Menu State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -593,6 +594,49 @@ const DashboardPage = () => {
     }
   }, [profits, current_months]);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef(null);
+  const suggestionsRef = useRef(null);
+
+  // Filter top selling products by search term
+  const filteredTopSelling = productsByPrice.filter(
+    (product) =>
+      product.name &&
+      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSuggestions]);
+
+  // Scroll to and highlight the product in the table
+  const handleSuggestionClick = (productId) => {
+    setShowSuggestions(false);
+    setSearchTerm("");
+    setTimeout(() => {
+      const row = document.getElementById(`top-selling-row-${productId}`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        row.classList.add("highlight-row");
+        setTimeout(() => row.classList.remove("highlight-row"), 1500);
+      }
+    }, 100);
+  };
+
   if (loading) return <div className="loading">Loading dashboard...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!dashboardData || dashboardData.length === 0)
@@ -601,9 +645,98 @@ const DashboardPage = () => {
   return (
     <>
       <main className="main-content">
-        <div className="search-container">
+        <div className="search-container" style={{ position: "relative" }}>
           <span className="search-icon" />
-          <input type="text" placeholder="Qidiruv..." />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Qidiruv..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setShowSuggestions(e.target.value.length > 0);
+            }}
+            onFocus={() => setShowSuggestions(searchTerm.length > 0)}
+            style={{ zIndex: 2, position: "relative" }}
+          />
+          {showSuggestions && filteredTopSelling.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              className="dashboard-search-suggestions"
+              style={{
+                position: "absolute",
+                top: 40,
+                left: 0,
+                right: 0,
+                background: "var(--color-bg-secondary)",
+                borderRadius: 8,
+                boxShadow: "0 4px 16px var(--color-shadow)",
+                zIndex: 10,
+                maxHeight: 260,
+                overflowY: "auto",
+                border: "1px solid var(--color-border)",
+                padding: 0,
+                margin: 0,
+              }}
+            >
+              {filteredTopSelling.map((product) => (
+                <div
+                  key={product.id}
+                  className="dashboard-search-suggestion-item"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 16px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                    background: "none",
+                  }}
+                  onClick={() => handleSuggestionClick(product.id)}
+                >
+                  {(product.image_url || product.image) && (
+                    <img
+                      src={
+                        product.image_url
+                          ? product.image_url
+                          : product.image
+                          ? `https://res.cloudinary.com/bnf404/${product.image}`
+                          : undefined
+                      }
+                      alt={product.name}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 6,
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+                  <span
+                    style={{
+                      fontWeight: 500,
+                      fontSize: 15,
+                      flex: 1,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {product.name}
+                  </span>
+                  <span
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: 13,
+                    }}
+                  >
+                    {product.total_sold_price?.toLocaleString()} UZS
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Updated Stats Cards Section with infinite animation */}
@@ -693,9 +826,9 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {productsByPrice.length > 0 ? (
-                  productsByPrice.map((product) => (
-                    <tr key={product.id}>
+                {filteredTopSelling.length > 0 ? (
+                  filteredTopSelling.map((product) => (
+                    <tr key={product.id} id={`top-selling-row-${product.id}`}>
                       <td
                         style={{
                           display: "flex",
@@ -777,6 +910,22 @@ const DashboardPage = () => {
           </table>
         </div>
       </div>
+      <style>{`
+        .dashboard-search-suggestions::-webkit-scrollbar {
+          width: 6px;
+        }
+        .dashboard-search-suggestions::-webkit-scrollbar-thumb {
+          background: var(--color-border);
+          border-radius: 6px;
+        }
+        .dashboard-search-suggestion-item:hover {
+          background: var(--color-hover);
+        }
+        .highlight-row {
+          background: var(--color-success-bg) !important;
+          transition: background 0.5s;
+        }
+      `}</style>
     </>
   );
 };

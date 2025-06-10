@@ -156,6 +156,28 @@ const SellPage = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Enhanced search: search across all categories, auto-switch to first matching category
+  useEffect(() => {
+    if (!searchTerm) return; // Don't auto-switch if search is empty
+    // Find the first category with a matching product
+    const lowerSearch = searchTerm.toLowerCase();
+    const match = products.find(
+      (product) =>
+        product.name && product.name.toLowerCase().includes(lowerSearch)
+    );
+    if (match && match.category !== activeCategory) {
+      setActiveCategory(match.category);
+    }
+  }, [searchTerm, products, activeCategory]);
+
+  // Filter products by active category and search term
+  const filteredProducts = products.filter(
+    (product) =>
+      product.category === activeCategory &&
+      product.name &&
+      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div
       className="sell-page-container products-page"
@@ -238,27 +260,25 @@ const SellPage = () => {
                 }
               }
             >
-              {products
-                .filter((product) => product.category === activeCategory)
-                .map((product) => (
-                  <div
-                    key={product.id}
-                    onClick={() => addToCart(product)}
-                    className="sell-page-product-card product-card"
-                  >
-                    <img
-                      src={`https://res.cloudinary.com/bnf404/${product.image}`}
-                      alt={product.name}
-                      className="sell-page-product-img"
-                    />
-                    <div className="sell-page-product-name">{product.name}</div>
-                    <div className="sell-page-product-price">
-                      {formatPrice(
-                        Number(product.price_per_quantity || product.price)
-                      )}
-                    </div>
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  onClick={() => addToCart(product)}
+                  className="sell-page-product-card product-card"
+                >
+                  <img
+                    src={`https://res.cloudinary.com/bnf404/${product.image}`}
+                    alt={product.name}
+                    className="sell-page-product-img"
+                  />
+                  <div className="sell-page-product-name">{product.name}</div>
+                  <div className="sell-page-product-price">
+                    {formatPrice(
+                      Number(product.price_per_quantity || product.price)
+                    )}
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -430,9 +450,36 @@ const SellPage = () => {
                     </svg>
                   </button>
                   <div className="sell-page-cart-qty">
-                    <span className="sell-page-cart-qty-value">
-                      {item.quantity}
-                    </span>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="sell-page-cart-qty-value"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (val === "") val = 0;
+                        const num = parseFloat(val);
+                        if (!isNaN(num) && num >= 0) {
+                          setCartItems((prevItems) =>
+                            prevItems.map((it) =>
+                              it.id === item.id ? { ...it, quantity: num } : it
+                            )
+                          );
+                        }
+                      }}
+                      style={{
+                        width: 40,
+                        textAlign: "center",
+                        background: "transparent",
+                        border: "none",
+                        color: "inherit",
+                        fontWeight: 700,
+                        fontSize: 16,
+                        outline: "none",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </div>
                   <button
                     onClick={(e) => {
@@ -505,13 +552,35 @@ const SellPage = () => {
             {formatPrice(getTotalPrice())}
           </span>
         </div>
-        <button
-          className="sell-page-cart-pay-btn"
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#5a8384")}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "#4c7273")}
-        >
-          Pay
-        </button>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            className="sell-page-cart-pay-btn"
+            onMouseEnter={(e) => (e.target.style.backgroundColor = "#5a8384")}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = "#4c7273")}
+            style={{ flex: 1 }}
+          >
+            Pay
+          </button>
+          <button
+            className="sell-page-cart-qarz-btn"
+            style={{
+              flex: 1,
+              background: "#2563eb",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "16px 0",
+              fontWeight: 700,
+              fontSize: 20,
+              cursor: "pointer",
+              transition: "background-color 0.2s ease",
+            }}
+            onMouseEnter={(e) => (e.target.style.background = "#1d4ed8")}
+            onMouseLeave={(e) => (e.target.style.background = "#2563eb")}
+          >
+            Qarz
+          </button>
+        </div>
       </div>
       <style>{`
         .sell-page-container.products-page > div[style*='overflowY: auto']::-webkit-scrollbar {
