@@ -455,7 +455,7 @@ const SellPage = () => {
                         width="1.5"
                         height="10"
                         rx="0.75"
-                        fill="#bfc9dd1"
+                        fill="#bfc9d1"
                       />
                       <rect
                         x="4"
