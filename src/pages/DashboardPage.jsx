@@ -43,7 +43,7 @@ const DashboardPage = () => {
   const [expense, setExpense] = useState(0);
   const [soldProducts, setSoldProducts] = useState(0);
   const [boughtProducts, setBoughtProducts] = useState(0);
-  const [productsByPrice, setProductsByPrice] = useState([]);
+  const [productsBySells, setProductsBySells] = useState([]);
   const [profits, setProfits] = useState([]);
   const [current_months, setMonth] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -244,12 +244,12 @@ const DashboardPage = () => {
         setBoughtProducts(boughtProductsObj.products_added || 0);
       }
 
-      // Extract products by price
-      const productsByPriceObj = dashboardData.find(
-        (item) => item.products_by_price
+      // Extract products by sells
+      const productsBySellsObj = dashboardData.find(
+        (item) => item.products_by_sells
       );
-      if (productsByPriceObj) {
-        setProductsByPrice(productsByPriceObj.products_by_price || []);
+      if (productsBySellsObj) {
+        setProductsBySells(productsBySellsObj.products_by_sells || []);
       }
 
       // Extract profits and set total revenue from last profit
@@ -598,8 +598,8 @@ const DashboardPage = () => {
   const searchInputRef = useRef(null);
   const suggestionsRef = useRef(null);
 
-  // Filter top selling products by search term
-  const filteredTopSelling = productsByPrice.filter(
+  // Filter top selling products by search term (use productsBySells)
+  const filteredTopSelling = productsBySells.filter(
     (product) =>
       product.name &&
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -637,10 +637,34 @@ const DashboardPage = () => {
     }, 100);
   };
 
+  // DEBUG: Log raw productsBySells for Top Selling table
+  useEffect(() => {
+    if (productsBySells && productsBySells.length > 0) {
+      // console.log("[Top Selling Table] Raw productsBySells data:", productsBySells);
+    } else {
+      // console.log("[Top Selling Table] productsBySells is empty or undefined:", productsBySells);
+    }
+  }, [productsBySells]); // Add productsBySells to dependency array
+
+  // DEBUG: Log dashboardData and productsBySells for Top Selling table
+  useEffect(() => {
+    // console.log("[DashboardPage] dashboardData:", dashboardData);
+    // console.log("[DashboardPage] productsBySells:", productsBySells);
+  }, [dashboardData, productsBySells]); // Add productsBySells to dependency array
+
   if (loading) return <div className="loading">Loading dashboard...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!dashboardData || dashboardData.length === 0)
     return <div className="no-data">No data yet! Add your first product.</div>;
+
+  // Add this block to define productsByPrice for use in the table
+  const productsByPriceObj =
+    dashboardData && Array.isArray(dashboardData)
+      ? dashboardData.find((item) => item.products_by_price)
+      : null;
+  const productsByPrice = productsByPriceObj
+    ? productsByPriceObj.products_by_price || []
+    : [];
 
   return (
     <>
@@ -679,62 +703,73 @@ const DashboardPage = () => {
                 margin: 0,
               }}
             >
-              {filteredTopSelling.map((product) => (
-                <div
-                  key={product.id}
-                  className="dashboard-search-suggestion-item"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 16px",
-                    cursor: "pointer",
-                    borderBottom: "1px solid var(--color-border)",
-                    color: "var(--color-text-primary)",
-                    background: "none",
-                  }}
-                  onClick={() => handleSuggestionClick(product.id)}
-                >
-                  {(product.image_url || product.image) && (
-                    <img
-                      src={
-                        product.image_url
-                          ? product.image_url
-                          : product.image
-                          ? `https://res.cloudinary.com/bnf404/${product.image}`
-                          : undefined
-                      }
-                      alt={product.name}
+              {filteredTopSelling.map((product) => {
+                // Find matching product in productsByPrice by id
+                const priceProduct = productsByPrice.find(
+                  (p) => p.id === product.id
+                );
+                return (
+                  <div
+                    key={product.id}
+                    className="dashboard-search-suggestion-item"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 16px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid var(--color-border)",
+                      color: "var(--color-text-primary)",
+                      background: "none",
+                    }}
+                    onClick={() => handleSuggestionClick(product.id)}
+                  >
+                    {(product.image_url || product.image) && (
+                      <img
+                        src={
+                          product.image_url
+                            ? product.image_url
+                            : product.image
+                            ? `https://res.cloudinary.com/bnf404/${product.image}`
+                            : undefined
+                        }
+                        alt={product.name}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
+                    <span
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 6,
-                        objectFit: "cover",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        flex: 1,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
-                    />
-                  )}
-                  <span
-                    style={{
-                      fontWeight: 500,
-                      fontSize: 15,
-                      flex: 1,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {product.name}
-                  </span>
-                  <span
-                    style={{
-                      color: "var(--color-text-secondary)",
-                      fontSize: 13,
-                    }}
-                  >
-                    {product.total_sold_price?.toLocaleString()} UZS
-                  </span>
-                </div>
-              ))}
+                    >
+                      {product.name}
+                    </span>
+                    <span
+                      style={{
+                        color: "var(--color-text-secondary)",
+                        fontSize: 13,
+                      }}
+                    >
+                      {priceProduct?.price_per_quantity
+                        ? Number(
+                            priceProduct.price_per_quantity
+                          ).toLocaleString()
+                        : "0"}{" "}
+                      UZS
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -815,60 +850,71 @@ const DashboardPage = () => {
 
         <section className="top-selling-section">
           <div className="table-container">
-            <h3>Top Selling products</h3>
+            <h3>Eng ko'p sotilgan mahsulotlar</h3>
             <table>
               <thead>
                 <tr>
-                  <th>Product</th>
-                  <th>Sales</th>
-                  <th>Amount</th>
-                  <th>Price</th>
+                  <th>Mahsulot nomi</th>
+                  <th>Sotilgan</th>
+                  <th>Qoldiq</th>
+                  <th>Jami daromad</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTopSelling.length > 0 ? (
-                  filteredTopSelling.map((product) => (
-                    <tr key={product.id} id={`top-selling-row-${product.id}`}>
-                      <td
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
-                        {(product.image_url || product.image) && (
-                          <img
-                            src={
-                              product.image_url
-                                ? product.image_url
-                                : product.image
-                                ? `https://res.cloudinary.com/bnf404/${product.image}`
-                                : undefined
-                            }
-                            alt={product.name}
-                            className="product-table-thumb"
-                          />
-                        )}
-                        <span
+                  filteredTopSelling.map((product) => {
+                    // Find matching product in productsByPrice by id
+                    const priceProduct = productsByPrice.find(
+                      (p) => p.id === product.id
+                    );
+                    return (
+                      <tr key={product.id} id={`top-selling-row-${product.id}`}>
+                        <td
                           style={{
-                            marginLeft:
-                              product.image_url || product.image ? 14 : 0,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
                           }}
                         >
-                          {product.name}
-                        </span>
-                      </td>
-                      <td>
-                        {(product.total_subtracted || 0).toLocaleString()}{" "}
-                        {product.quantity_type}
-                      </td>
-                      <td>
-                        {product.quantity.toLocaleString()}{" "}
-                        {product.quantity_type}
-                      </td>
-                      <td>{product.total_sold_price.toLocaleString()} UZS</td>
-                    </tr>
-                  ))
+                          {(product.image_url || product.image) && (
+                            <img
+                              src={
+                                product.image_url
+                                  ? product.image_url
+                                  : product.image
+                                  ? `https://res.cloudinary.com/bnf404/${product.image}`
+                                  : undefined
+                              }
+                              alt={product.name}
+                              className="product-table-thumb"
+                            />
+                          )}
+                          <span
+                            style={{
+                              marginLeft:
+                                product.image_url || product.image ? 14 : 0,
+                            }}
+                          >
+                            {product.name}
+                          </span>
+                        </td>
+                        <td>
+                          {(product.total_subtracted || 0).toLocaleString()}{" "}
+                          {product.quantity_type}
+                        </td>
+                        <td>
+                          {product.quantity.toLocaleString()}{" "}
+                          {product.quantity_type}
+                        </td>
+                        <td>
+                          {(
+                            priceProduct?.total_sold_price || 0
+                          ).toLocaleString()}{" "}
+                          UZS
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="4" className="text-center">
