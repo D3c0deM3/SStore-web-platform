@@ -1,5 +1,17 @@
 /* SellPage styles */
 
+:root {
+  --sellpage-selection-bg: #232735;
+  --bar-item-color: #393e4c;
+  --bar-item-text-color: white;
+}
+
+.light-theme {
+  --sellpage-selection-bg: #fff;
+  --bar-item-color: white;
+  --bar-item-text-color: #041421;
+}
+
 .sell-page-content-wrapper {
   padding-top: 12px;
 }
@@ -19,12 +31,37 @@
 }
 
 .sell-page-product-selection {
-  flex: 2;
-  background: #232735;
+  flex: unset;
+  height: auto;
+  min-height: 340px; /* Ensures card doesn't look too small with few items */
+  max-height: 100%;
+  background: var(--sellpage-selection-bg);
   border-radius: 16px;
   padding: 24px;
   display: flex;
   flex-direction: column;
+  transition: background 0.2s;
+  box-shadow: 0 4px 6px var(--color-shadow);
+}
+
+/* Product cards inside product selection: default (dark theme) shadow */
+.sell-page-product-selection .sell-page-product-card {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  z-index: 2;
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+/* More intense shadow for product cards in light theme */
+.light-theme .sell-page-product-selection .sell-page-product-card {
+  box-shadow: 0 6px 24px 0 rgba(44, 62, 80, 0.13),
+    0 1.5px 6px 0 rgba(44, 62, 80, 0.09);
+}
+
+/* Dark theme override for product cards */
+html.dark .sell-page-product-selection .sell-page-product-card {
+  background: var(--sellpage-product-card-bg) !important;
+  color: #fff !important;
 }
 
 .sell-page-category-bar {
@@ -33,13 +70,18 @@
   margin-bottom: 24px;
   background: #393e4c;
   border-radius: 12px;
-  padding: 4px;
+  padding: 5px;
+}
+
+/* Light theme override for category bar */
+.light-theme .sell-page-category-bar {
+  background: #eeeeee;
 }
 
 .sell-page-category-btn {
   flex: 1;
-  background: #393e4c;
-  color: #bfc9d1;
+  background: var(--bar-item-color);
+  color: var(--bar-item-text-color);
   border: none;
   border-radius: 8px;
   padding: 12px;
@@ -62,6 +104,10 @@
   margin-top: 18px;
   overflow-y: auto;
   flex: 1;
+  align-items: start; /* Prevent grid items from stretching vertically */
+  padding-left: 0.5vw;
+  padding-top: 1vh;
+  padding-right: 0.5vw;
 }
 
 .sell-page-product-card {
@@ -69,7 +115,7 @@
   color: var(--color-text-primary);
   border-radius: 12px;
   box-shadow: 0 2px 8px var(--color-shadow);
-  padding: 18px 14px 14px 14px;
+  padding: 28px 14px 24px 14px; /* Increased top and bottom padding */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -77,6 +123,8 @@
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   margin-bottom: 18px;
   min-width: 0;
+  align-self: start; /* Prevent card from stretching vertically */
+  max-height: 320px; /* Optional: limit max height for very tall content */
 }
 
 .sell-page-product-card:hover {
@@ -262,11 +310,4 @@
 
 .sell-page-cart-pay-btn:hover {
   background-color: #5a8384;
-}
-
-/* Light theme override for SellPage product card */
-.light-theme .sell-page-product-card.product-card {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  box-shadow: 0 4px 12px var(--color-shadow);
 }
