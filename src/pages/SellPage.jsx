@@ -11,6 +11,10 @@ const SellPage = () => {
   const [categories, setCategories] = useState([]);
   // Detect theme (light/dark) from html or body class
   const [isLightTheme, setIsLightTheme] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Load cart from localStorage on mount (before any other useEffect that might overwrite it)
   useEffect(() => {
@@ -177,6 +181,52 @@ const SellPage = () => {
       product.name &&
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handlePay = async () => {
+    if (cartItems.length === 0) return;
+    setLoading(true);
+    setShowError(false);
+    setErrorMessage("");
+    const token = localStorage.getItem("token");
+    const baseUrl =
+      process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL;
+    if (!baseUrl) {
+      setErrorMessage(
+        "API manzili topilmadi. Iltimos, administratorga murojaat qiling."
+      );
+      setShowError(true);
+      setLoading(false);
+      return;
+    }
+    const url = `${baseUrl}/api/sell/`;
+    const sells = cartItems.map((item) => ({
+      product_id: item.id,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify({ sells }),
+      });
+      if (response.status === 200) {
+        setShowSuccess(true);
+        setCartItems([]);
+        setTimeout(() => setShowSuccess(false), 1500);
+      } else {
+        setErrorMessage("Xatolik yuz berdi. Qayta urinib ko'ring.");
+        setShowError(true);
+      }
+    } catch (e) {
+      setErrorMessage("Tarmoq xatosi yoki server javob bermadi.");
+      setShowError(true);
+    }
+    setLoading(false);
+  };
 
   return (
     <div
@@ -555,11 +605,47 @@ const SellPage = () => {
         <div style={{ display: "flex", gap: 12 }}>
           <button
             className="sell-page-cart-pay-btn"
+            onClick={handlePay}
+            disabled={loading || cartItems.length === 0}
+            style={{
+              flex: 1,
+              opacity: loading ? 0.7 : 1,
+              position: "relative",
+            }}
             onMouseEnter={(e) => (e.target.style.backgroundColor = "#5a8384")}
             onMouseLeave={(e) => (e.target.style.backgroundColor = "#4c7273")}
-            style={{ flex: 1 }}
           >
-            Pay
+            {loading ? (
+              <span
+                className="pay-btn-spinner"
+                style={{ display: "inline-block", verticalAlign: "middle" }}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{ animation: "spin 1s linear infinite" }}
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#fff"
+                    strokeWidth="4"
+                    opacity="0.2"
+                  />
+                  <path
+                    d="M22 12a10 10 0 0 1-10 10"
+                    stroke="#fff"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            ) : (
+              "Pay"
+            )}
           </button>
           <button
             className="sell-page-cart-qarz-btn"
@@ -586,7 +672,174 @@ const SellPage = () => {
         .sell-page-container.products-page > div[style*='overflowY: auto']::-webkit-scrollbar {
           display: none;
         }
+        .sell-success-notification {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 9999;
+          background: rgba(255,255,255,0.95);
+          border-radius: 16px;
+          box-shadow: 0 8px 32px var(--color-shadow);
+          padding: 40px 60px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: pop-in 0.18s cubic-bezier(0.4,2,0.6,1) both;
+        }
+        .sell-success-tick {
+          width: 72px;
+          height: 72px;
+          margin-bottom: 18px;
+        }
+        @keyframes pop-in {
+          0% { transform: scale(0.7) translate(-50%, -50%); opacity: 0; }
+          100% { transform: scale(1) translate(-50%, -50%); opacity: 1; }
+        }
+        .sell-page-cart-pay-btn[disabled] {
+          cursor: not-allowed;
+          background: #7a8e8e !important;
+        }
+        .pay-btn-spinner svg {
+          animation: pay-spin 0.8s linear infinite;
+        }
+        @keyframes pay-spin {
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .sell-error-notification {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 9999;
+          background: rgba(255,255,255,0.97);
+          border-radius: 16px;
+          box-shadow: 0 8px 32px var(--color-shadow);
+          padding: 40px 60px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: pop-in 0.18s cubic-bezier(0.4,2,0.6,1) both;
+        }
+        .sell-error-cross {
+          width: 72px;
+          height: 72px;
+          margin-bottom: 18px;
+          animation: shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both;
+        }
+        @keyframes shake {
+          10%, 90% { transform: translate(-50%, -50%) translateX(-1px); }
+          20%, 80% { transform: translate(-50%, -50%) translateX(2px); }
+          30%, 50%, 70% { transform: translate(-50%, -50%) translateX(-4px); }
+          40%, 60% { transform: translate(-50%, -50%) translateX(4px); }
+        }
+        .sell-error-close-btn:hover {
+          background: #dc2626;
+        }
       `}</style>
+      {showSuccess && (
+        <div className="sell-success-notification">
+          <svg
+            className="sell-success-tick"
+            viewBox="0 0 72 72"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="36"
+              cy="36"
+              r="34"
+              fill="#e6f9ed"
+              stroke="#4ade80"
+              strokeWidth="4"
+            />
+            <path
+              d="M22 38l10 10 18-22"
+              stroke="#22c55e"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div
+            style={{
+              color: "#22c55e",
+              fontWeight: 700,
+              fontSize: 22,
+              marginBottom: 2,
+            }}
+          >
+            Sotuv muvaffaqiyatli!
+          </div>
+        </div>
+      )}
+      {showError && (
+        <div className="sell-error-notification">
+          <svg
+            className="sell-error-cross"
+            viewBox="0 0 72 72"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="36"
+              cy="36"
+              r="34"
+              fill="#fef2f2"
+              stroke="#f87171"
+              strokeWidth="4"
+            />
+            <path
+              d="M26 26l20 20M46 26l-20 20"
+              stroke="#ef4444"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div
+            style={{
+              color: "#ef4444",
+              fontWeight: 700,
+              fontSize: 22,
+              marginBottom: 2,
+            }}
+          >
+            Xatolik!
+          </div>
+          <div
+            style={{
+              color: "#ef4444",
+              fontWeight: 500,
+              fontSize: 16,
+              textAlign: "center",
+              maxWidth: 320,
+            }}
+          >
+            {errorMessage}
+          </div>
+          <button
+            className="sell-error-close-btn"
+            onClick={() => setShowError(false)}
+            style={{
+              marginTop: 18,
+              background: "#ef4444",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 24px",
+              fontWeight: 700,
+              fontSize: 16,
+              cursor: "pointer",
+            }}
+          >
+            Yopish
+          </button>
+        </div>
+      )}
     </div>
   );
 };
