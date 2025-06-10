@@ -10,6 +10,7 @@ import AddProductModal from "../components/AddProductDrawer";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
+  const theme = "light";
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,6 +53,10 @@ const ProductsPage = () => {
   const [addProductError, setAddProductError] = useState("");
   const [addProductButtonLoading, setAddProductButtonLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [drawerData, setDrawerData] = useState(null);
+  const [drawerError, setDrawerError] = useState("");
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -791,6 +796,51 @@ const ProductsPage = () => {
     }
   };
 
+  // Fetch product details and open drawer
+  const handleProductRowClick = async (productId) => {
+    setDrawerOpen(true);
+    setDrawerLoading(true);
+    setDrawerError("");
+    setDrawerData(null);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setDrawerError("Token not found");
+      setDrawerLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/products/${productId}/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch product details");
+      const data = await res.json();
+      setDrawerData(data);
+    } catch (err) {
+      setDrawerError(err.message);
+    } finally {
+      setDrawerLoading(false);
+    }
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerData(null);
+    setDrawerError("");
+  };
+
+  // Helper to format date as DD/MM/YYYY
+  const formatDate = (dateString) => {
+    const d = new Date(dateString);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
@@ -1071,7 +1121,12 @@ const ProductsPage = () => {
                 {filteredProducts.map((product) => {
                   const statusInfo = getStatusInfo(product.quantity);
                   return (
-                    <tr key={product.id}>
+                    <tr
+                      key={product.id}
+                      className="product-row"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleProductRowClick(product.id)}
+                    >
                       <td>
                         <input
                           type="checkbox"
@@ -1250,6 +1305,186 @@ const ProductsPage = () => {
           </div>
         </div>
       </div>
+      {/* Product Details Drawer */}
+      <div
+        className={`product-details-drawer${
+          drawerOpen ? " open" : ""
+        } ${theme}`}
+        style={{
+          right: drawerOpen ? 0 : "-480px",
+          transition: "right 0.35s cubic-bezier(.4,0,.2,1)",
+          zIndex: 1002,
+        }}
+        tabIndex={-1}
+        aria-modal="true"
+        role="dialog"
+      >
+        <button
+          className="drawer-close-btn"
+          onClick={handleCloseDrawer}
+          aria-label="Yopish"
+        >
+          <span style={{ fontSize: 24, fontWeight: 700 }}>&times;</span>
+        </button>
+        {drawerLoading ? (
+          <div className="drawer-loading">Yuklanmoqda...</div>
+        ) : drawerError ? (
+          <div className="drawer-error">{drawerError}</div>
+        ) : drawerData ? (
+          <div className="drawer-content">
+            <div className="drawer-header">
+              <div className="drawer-image-wrapper">
+                {drawerData.product.image || drawerData.product.image_url ? (
+                  <img
+                    src={
+                      drawerData.product.image_url
+                        ? drawerData.product.image_url
+                        : drawerData.product.image
+                        ? `https://res.cloudinary.com/bnf404/${drawerData.product.image}`
+                        : undefined
+                    }
+                    alt={drawerData.product.name}
+                    className="drawer-product-image"
+                  />
+                ) : (
+                  <div className="drawer-image-placeholder">No Image</div>
+                )}
+              </div>
+              <div className="drawer-title-section">
+                <h2 className="drawer-product-name">
+                  {drawerData.product.name}
+                </h2>
+                <span className="drawer-category">
+                  {drawerData.product.category_name || "Boshqa"}
+                </span>
+                <span
+                  className={`drawer-status ${
+                    getStatusInfo(drawerData.product.quantity).class
+                  }`}
+                >
+                  {getStatusInfo(drawerData.product.quantity).text}
+                </span>
+              </div>
+            </div>
+            <div className="drawer-info-grid">
+              <div>
+                <span className="drawer-label">Qoldiq:</span>
+                <span className="drawer-value">
+                  {drawerData.product.quantity}
+                </span>
+              </div>
+              <div>
+                <span className="drawer-label">Narx:</span>
+                <span className="drawer-value">
+                  {parseFloat(
+                    drawerData.product.price_per_quantity
+                  ).toLocaleString()}{" "}
+                  UZS
+                </span>
+              </div>
+              <div>
+                <span className="drawer-label">Status:</span>
+                <span className="drawer-value">
+                  {drawerData.product.status === "available"
+                    ? "Bor"
+                    : drawerData.product.status === "few"
+                    ? "Kam qolgan"
+                    : "Mavjud emas"}
+                </span>
+              </div>
+              <div>
+                <span className="drawer-label">Turi:</span>
+                <span className="drawer-value">
+                  {drawerData.product.quantity_type}
+                </span>
+              </div>
+              <div>
+                <span className="drawer-label">Qo'shilgan sana:</span>
+                <span className="drawer-value">
+                  {formatDate(drawerData.product.date)}
+                </span>
+              </div>
+            </div>
+            <div className="drawer-totals">
+              <div>
+                <span className="drawer-label">Jami sotilgan:</span>
+                <span className="drawer-value">
+                  {drawerData.total_sold
+                    ? parseFloat(drawerData.total_sold).toLocaleString()
+                    : 0}{" "}
+                  UZS
+                </span>
+              </div>
+              <div>
+                <span className="drawer-label">Jami xarid qilingan:</span>
+                <span className="drawer-value">
+                  {drawerData.total_bought
+                    ? parseFloat(drawerData.total_bought).toLocaleString()
+                    : 0}{" "}
+                  UZS
+                </span>
+              </div>
+            </div>
+            <div className="drawer-history-section">
+              <h3>So'nggi sotuvlar</h3>
+              {drawerData.product_sold && drawerData.product_sold.length > 0 ? (
+                <ul className="drawer-history-list">
+                  {drawerData.product_sold.map((sale) => (
+                    <li key={sale.id} className="drawer-history-item">
+                      <span className="drawer-history-date">
+                        {formatDate(sale.date)}
+                      </span>
+                      <span className="drawer-history-qty">
+                        {sale.quantity} x{" "}
+                        {parseFloat(sale.price).toLocaleString()} UZS
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="drawer-history-empty">Sotuvlar yo'q</div>
+              )}
+              <h3>So'nggi xaridlar</h3>
+              {drawerData.product_bought &&
+              drawerData.product_bought.length > 0 ? (
+                <ul className="drawer-history-list">
+                  {drawerData.product_bought.map((buy) => (
+                    <li key={buy.id} className="drawer-history-item">
+                      <span className="drawer-history-date">
+                        {formatDate(buy.date)}
+                      </span>
+                      <span className="drawer-history-qty">
+                        {buy.quantity} x{" "}
+                        {parseFloat(buy.price).toLocaleString()} UZS
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="drawer-history-empty">Xaridlar yo'q</div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+      {/* Drawer overlay */}
+      {drawerOpen && (
+        <div
+          className="drawer-overlay"
+          onClick={handleCloseDrawer}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background:
+              theme === "dark" ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.18)",
+            zIndex: 1001,
+            transition: "background 0.2s",
+          }}
+        />
+      )}
     </div>
   );
 };

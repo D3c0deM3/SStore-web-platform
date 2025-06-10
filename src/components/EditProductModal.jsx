@@ -643,7 +643,9 @@ const EditProductModal = ({
               transition: "background 0.18s, opacity 0.18s",
               boxShadow: "0 2px 8px rgba(76,175,80,0.08)",
             }}
-            onClick={() => onSave({ ...form, localImageFile: form.localImageFile || null })}
+            onClick={() =>
+              onSave({ ...form, localImageFile: form.localImageFile || null })
+            }
             disabled={loading}
           >
             {loading ? (
