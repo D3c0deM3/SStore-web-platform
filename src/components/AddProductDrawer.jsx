@@ -352,7 +352,39 @@ const AddProductModal = ({
                     color: "var(--modal-label-color, #fff)",
                   }}
                 >
-                  Narx
+                  Sotib olingan narxi
+                </label>
+                <input
+                  type="number"
+                  value={form.bought_price || ""}
+                  onChange={(e) =>
+                    onFieldChange("bought_price", e.target.value)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: 15,
+                    background: "#f5f6fa",
+                    color: "#222",
+                    marginTop: 2,
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                />
+              </div>
+              <div style={{ textAlign: "left" }}>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    marginBottom: 6,
+                    display: "block",
+                    color: "var(--modal-label-color, #fff)",
+                  }}
+                >
+                  Sotuv narxi
                 </label>
                 <input
                   type="number"

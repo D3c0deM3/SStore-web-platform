@@ -57,6 +57,15 @@ const ProductsPage = () => {
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [drawerData, setDrawerData] = useState(null);
   const [drawerError, setDrawerError] = useState("");
+  // Add state for refill modal
+  const [refillModal, setRefillModal] = useState({
+    show: false,
+    product: null,
+    price: "",
+    quantity: "",
+    loading: false,
+    error: "",
+  });
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
 
@@ -220,6 +229,7 @@ const ProductsPage = () => {
         );
         formData.append("status", addProductForm.status);
         formData.append("image", addProductForm.localImageFile);
+        formData.append("bought_price", addProductForm.bought_price || "");
         response = await fetch(`${apiBaseUrl}/api/products/create/`, {
           method: "POST",
           headers: {
@@ -238,6 +248,7 @@ const ProductsPage = () => {
             addProductForm.price_per_quantity
           ).toFixed(2),
           status: addProductForm.status,
+          bought_price: addProductForm.bought_price || "",
         };
         response = await fetch(`${apiBaseUrl}/api/products/create/`, {
           method: "POST",
@@ -841,6 +852,104 @@ const ProductsPage = () => {
     return `${day}/${month}/${year}`;
   };
 
+  // Add handler to open refill modal
+  const handleOpenRefillModal = (product) => {
+    setRefillModal({
+      show: true,
+      product,
+      price: "",
+      quantity: "",
+      loading: false,
+      error: "",
+    });
+  };
+
+  // Add handler to close refill modal
+  const handleCloseRefillModal = () => {
+    setRefillModal({
+      show: false,
+      product: null,
+      price: "",
+      quantity: "",
+      loading: false,
+      error: "",
+    });
+  };
+
+  // Add handler to submit refill
+  const handleRefillProduct = async () => {
+    if (!refillModal.product || !refillModal.price || !refillModal.quantity) {
+      setRefillModal((prev) => ({
+        ...prev,
+        error: "Iltimos, barcha maydonlarni to'ldiring.",
+      }));
+      return;
+    }
+    setRefillModal((prev) => ({ ...prev, loading: true, error: "" }));
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setRefillModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: "Token topilmadi",
+      }));
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/buy/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: refillModal.product.id,
+          price: Number(refillModal.price),
+          quantity: Number(refillModal.quantity),
+        }),
+      });
+      if (res.status === 200) {
+        // Refetch products after refill
+        const productsRes = await fetch(`${apiBaseUrl}/api/products/`, {
+          method: "GET",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          setProducts(productsData.products || []);
+        }
+        setRefillModal({
+          show: false,
+          product: null,
+          price: "",
+          quantity: "",
+          loading: false,
+          error: "",
+        });
+        setNotification({
+          show: true,
+          type: "success",
+          message: "Mahsulot to'ldirildi",
+        });
+      } else {
+        setRefillModal((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Xatolik yuz berdi. Qayta urinib ko'ring.",
+        }));
+      }
+    } catch (err) {
+      setRefillModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: "Tarmoq xatosi yoki server javob bermadi.",
+      }));
+    }
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   return (
@@ -889,6 +998,153 @@ const ProductsPage = () => {
         error={addProductError}
         apiBaseUrl={apiBaseUrl}
       />
+      {/* Refill Product Modal */}
+      {refillModal.show && (
+        <div
+          className="refill-modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.25)",
+            zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="refill-modal"
+            style={{
+              background: "var(--color-bg-secondary)",
+              borderRadius: 16,
+              boxShadow: "0 8px 32px var(--color-shadow)",
+              padding: 32,
+              minWidth: 340,
+              maxWidth: 400,
+              width: "100%",
+              position: "relative",
+              animation: "pop-in 0.18s cubic-bezier(0.4,2,0.6,1) both",
+            }}
+          >
+            <h2
+              style={{
+                marginTop: 0,
+                marginBottom: 18,
+                color: theme === "light" ? "var(--color-text-primary)" : "#fff",
+              }}
+            >
+              Mahsulotni to'ldirish
+            </h2>
+            <div style={{ marginBottom: 18 }}>
+              <label
+                style={{
+                  fontWeight: 600,
+                  color:
+                    theme === "light" ? "var(--color-text-primary)" : "#fff",
+                }}
+              >
+                Narx
+              </label>
+              <input
+                type="number"
+                value={refillModal.price}
+                onChange={(e) =>
+                  setRefillModal((prev) => ({ ...prev, price: e.target.value }))
+                }
+                style={{
+                  width: "100%",
+                  padding: 10,
+                  marginTop: 6,
+                  marginBottom: 8,
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 16,
+                }}
+                placeholder="Narx"
+                min={0}
+              />
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <label
+                style={{
+                  fontWeight: 600,
+                  color:
+                    theme === "light" ? "var(--color-text-primary)" : "#fff",
+                }}
+              >
+                Miqdor
+              </label>
+              <input
+                type="number"
+                value={refillModal.quantity}
+                onChange={(e) =>
+                  setRefillModal((prev) => ({
+                    ...prev,
+                    quantity: e.target.value,
+                  }))
+                }
+                style={{
+                  width: "100%",
+                  padding: 10,
+                  marginTop: 6,
+                  marginBottom: 8,
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 16,
+                }}
+                placeholder="Miqdor"
+                min={1}
+              />
+            </div>
+            {refillModal.error && (
+              <div
+                style={{ color: "#ef4444", marginBottom: 10, fontWeight: 600 }}
+              >
+                {refillModal.error}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+              <button
+                onClick={handleRefillProduct}
+                disabled={refillModal.loading}
+                style={{
+                  flex: 1,
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "12px 0",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  cursor: refillModal.loading ? "not-allowed" : "pointer",
+                  opacity: refillModal.loading ? 0.7 : 1,
+                }}
+              >
+                {refillModal.loading ? "Yuborilmoqda..." : "Tasdiqlash"}
+              </button>
+              <button
+                onClick={handleCloseRefillModal}
+                style={{
+                  flex: 1,
+                  background: "#e5e7eb",
+                  color: "#222",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "12px 0",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  cursor: "pointer",
+                }}
+              >
+                Bekor qilish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="content-wrapper no-right-column">
         <div className="main-content">
           <div className="header-section">
@@ -1125,7 +1381,16 @@ const ProductsPage = () => {
                       key={product.id}
                       className="product-row"
                       style={{ cursor: "pointer" }}
-                      onClick={() => handleProductRowClick(product.id)}
+                      onClick={(e) => {
+                        // Only open drawer if the click is not on the options button or its dropdown
+                        if (
+                          e.target.closest(".options-btn") ||
+                          e.target.closest(".product-dropdown")
+                        ) {
+                          return;
+                        }
+                        handleProductRowClick(product.id);
+                      }}
                     >
                       <td>
                         <input
@@ -1293,6 +1558,44 @@ const ProductsPage = () => {
                                 />
                               </svg>
                               O'chirish
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleOpenRefillModal(product);
+                                setMenuOpenId(null);
+                              }}
+                              className="dropdown-action-btn"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                              }}
+                            >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                style={{ display: "inline" }}
+                              >
+                                <rect
+                                  x="9"
+                                  y="4"
+                                  width="2"
+                                  height="12"
+                                  rx="1"
+                                  fill="#22c55e"
+                                />
+                                <rect
+                                  x="4"
+                                  y="9"
+                                  width="12"
+                                  height="2"
+                                  rx="1"
+                                  fill="#22c55e"
+                                />
+                              </svg>
+                              Mahsulotni to'ldirish
                             </button>
                           </div>
                         )}
