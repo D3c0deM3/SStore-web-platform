@@ -259,9 +259,71 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Kategoriya
+                  <span>Kategoriya</span>
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      cursor: "pointer",
+                      display: "inline-block",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 0;
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        boxShadow: "0 2px 8px rgba(33,150,243,0.08)",
+                        transition: "background 0.18s, color 0.18s",
+                      }}
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "var(--color-bg-secondary, #222e3a)",
+                        color: "var(--modal-label-color, #fff)",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.13)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        zIndex: 10,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        transition: "opacity 0.18s",
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      Mahsulot kategoriyasini tanlang. Masalan: Ichimliklar,
+                      Oziq-ovqat, va h.k.
+                    </span>
+                  </span>
                 </label>
                 <select
                   value={form.category_id}
@@ -292,9 +354,71 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Mahsulot nomi
+                  <span>Mahsulot nomi</span>
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      cursor: "pointer",
+                      display: "inline-block",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 0;
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        boxShadow: "0 2px 8px rgba(33,150,243,0.08)",
+                        transition: "background 0.18s, color 0.18s",
+                      }}
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "var(--color-bg-secondary, #222e3a)",
+                        color: "var(--modal-label-color, #fff)",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.13)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        zIndex: 10,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        transition: "opacity 0.18s",
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      Mahsulotning to'liq nomini kiriting. Masalan: 'Coca Cola
+                      1L'.
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -320,9 +444,100 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Qoldiq
+                  <span>Qoldiq</span>
+                  <span
+                    style={{
+                      position: "relative",
+                      marginLeft: 6,
+                      display: "inline-block",
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        cursor: "pointer",
+                      }}
+                      tabIndex={0}
+                      onFocus={(e) =>
+                        (e.target.parentNode.querySelector(
+                          ".custom-tooltip"
+                        ).style.opacity = 1)
+                      }
+                      onBlur={(e) =>
+                        (e.target.parentNode.querySelector(
+                          ".custom-tooltip"
+                        ).style.opacity = 0)
+                      }
+                      onMouseEnter={(e) =>
+                        (e.target.parentNode.querySelector(
+                          ".custom-tooltip"
+                        ).style.opacity = 1)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.parentNode.querySelector(
+                          ".custom-tooltip"
+                        ).style.opacity = 0)
+                      }
+                      aria-describedby="qoldiq-tooltip"
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      id="qoldiq-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transition: "opacity 0.18s cubic-bezier(.4,0,.2,1)",
+                        position: "absolute",
+                        left: "110%",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        zIndex: 10,
+                        background: "var(--color-bg-secondary, #fff)",
+                        color: "#222",
+                        border: "1.5px solid #e0e0e0",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 400,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Mahsulotning mavjud miqdorini kiriting. Faqat son.
+                      Masalan: 100.
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: -8,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          width: 0,
+                          height: 0,
+                          borderTop: "6px solid transparent",
+                          borderBottom: "6px solid transparent",
+                          borderRight:
+                            "8px solid var(--color-bg-secondary, #fff)",
+                          filter: "drop-shadow(-1px 0 0 #e0e0e0)",
+                        }}
+                      />
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -350,9 +565,71 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Sotib olingan narxi
+                  <span>Sotib olingan narxi</span>
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      cursor: "pointer",
+                      display: "inline-block",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 0;
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        boxShadow: "0 2px 8px rgba(33,150,243,0.08)",
+                        transition: "background 0.18s, color 0.18s",
+                      }}
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "var(--color-bg-secondary, #222e3a)",
+                        color: "var(--modal-label-color, #fff)",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.13)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        zIndex: 10,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        transition: "opacity 0.18s",
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      Mahsulotni sotib olganingizdagi narx. Faqat son. Masalan:
+                      8000.
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -382,9 +659,70 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Sotuv narxi
+                  <span>Sotuv narxi</span>
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      cursor: "pointer",
+                      display: "inline-block",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 0;
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        boxShadow: "0 2px 8px rgba(33,150,243,0.08)",
+                        transition: "background 0.18s, color 0.18s",
+                      }}
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "var(--color-bg-secondary, #222e3a)",
+                        color: "var(--modal-label-color, #fff)",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.13)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        zIndex: 10,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        transition: "opacity 0.18s",
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      Mahsulotni sotadigan narx. Faqat son. Masalan: 10000.
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -414,9 +752,71 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Miqdor turi
+                  <span>Miqdor turi</span>
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      cursor: "pointer",
+                      display: "inline-block",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 0;
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        boxShadow: "0 2px 8px rgba(33,150,243,0.08)",
+                        transition: "background 0.18s, color 0.18s",
+                      }}
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "var(--color-bg-secondary, #222e3a)",
+                        color: "var(--modal-label-color, #fff)",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.13)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        zIndex: 10,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        transition: "opacity 0.18s",
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      Mahsulot o'lchov birligini tanlang: kg, dona, metr yoki
+                      litr.
+                    </span>
+                  </span>
                 </label>
                 <select
                   value={form.quantity_type || "kg"}
@@ -448,9 +848,71 @@ const AddProductModal = ({
                     marginBottom: 6,
                     display: "block",
                     color: "var(--modal-label-color, #fff)",
+                    position: "relative",
                   }}
                 >
-                  Status
+                  <span>Status</span>
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      cursor: "pointer",
+                      display: "inline-block",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 1;
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip =
+                        e.currentTarget.querySelector(".custom-tooltip");
+                      if (tooltip) tooltip.style.opacity = 0;
+                    }}
+                  >
+                    <b
+                      style={{
+                        color: "#2196f3",
+                        fontSize: 12,
+                        border: "1px solid #2196f3",
+                        borderRadius: "50%",
+                        padding: "0px 6px",
+                        fontFamily: "monospace",
+                        display: "inline-block",
+                        boxShadow: "0 2px 8px rgba(33,150,243,0.08)",
+                        transition: "background 0.18s, color 0.18s",
+                      }}
+                    >
+                      !
+                    </b>
+                    <span
+                      className="custom-tooltip"
+                      style={{
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "var(--color-bg-secondary, #222e3a)",
+                        color: "var(--modal-label-color, #fff)",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.13)",
+                        padding: "8px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        zIndex: 10,
+                        minWidth: 180,
+                        maxWidth: 260,
+                        transition: "opacity 0.18s",
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      Mahsulot holatini tanlang: Bor (mavjud), Kam qolgan yoki
+                      Mavjud emas.
+                    </span>
+                  </span>
                 </label>
                 <select
                   value={form.status}
