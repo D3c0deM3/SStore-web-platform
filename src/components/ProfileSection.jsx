@@ -45,9 +45,22 @@ const ProfileSection = ({ user }) => {
   }
 
   // Dropdown actions
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      await fetch("/api/logout/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+      });
+    } catch (err) {
+      // Optionally handle error (e.g., show notification)
+    } finally {
+      localStorage.removeItem("token");
+      navigate("/"); // Redirect to landing page
+    }
   };
   const handleEditProfile = () => navigate("/profile/edit");
   const handleChangeLanguage = () => {};

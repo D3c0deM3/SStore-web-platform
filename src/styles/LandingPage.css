@@ -6,6 +6,7 @@
   padding: 1.5rem 5%;
   background: transparent;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #041421;
 }
 
 .navbar.sticky {
@@ -83,6 +84,7 @@
   text-align: center;
   padding: 5rem 5% 0;
   position: relative;
+  background-color: #041421;
 }
 
 .hero-content h1 {

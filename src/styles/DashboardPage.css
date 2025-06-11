@@ -24,6 +24,7 @@
   --color-shadow: rgba(0, 0, 0, 0.3);
   --color-active: #2e313a;
   --color-hover: #2d3748;
+  --bg-color-active: #2e313a;
 
   /* Menu colors */
   --color-menu-text: #aca7a7;
@@ -68,6 +69,7 @@
 
   /* Sidebar active */
   --color-active: #4c7273;
+  --bg-color-active: white;
   --color-hover: #cbd5e0;
   --color-menu-text: #6c757d;
   --color-shadow: rgba(0, 0, 0, 0.1);
@@ -699,6 +701,10 @@ table th {
 .products-table table th,
 .products-table table td {
   padding: 15px 15px;
+}
+
+.bg {
+  background-color: var(--bg-color-active);
 }
 
 table td {

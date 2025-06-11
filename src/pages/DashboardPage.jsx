@@ -929,7 +929,7 @@ const DashboardPage = () => {
       </main>
       <div className="right-column">
         <ProfileSection user={user} />
-        <div className="table-container products-table">
+        <div className="table-container products-table bg">
           <table>
             <thead>
               <tr>
