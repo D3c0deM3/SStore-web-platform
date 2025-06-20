@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import SotishIcon from "../assets/dashboard/sotish.svg";
+import QarzIcon from "../assets/dashboard/qarz-icon.svg";
 
 const Sidebar = ({ user, getPlanIconClass }) => {
   const location = useLocation();
@@ -49,6 +50,24 @@ const Sidebar = ({ user, getPlanIconClass }) => {
               }}
             />
             Sotish
+          </li>
+          <li
+            className={location.pathname === "/qarzlar" ? "active" : ""}
+            onClick={() => navigate("/qarzlar")}
+          >
+            <img
+              src={QarzIcon}
+              alt="Qarzlar"
+              className="icon qarz-icon"
+              style={{
+                width: 20,
+                height: 20,
+                marginRight: 10,
+                verticalAlign: "middle",
+                display: "inline-block",
+              }}
+            />
+            Qarzlar
           </li>
           <li
             className={location.pathname === "/kalkulyator" ? "active" : ""}

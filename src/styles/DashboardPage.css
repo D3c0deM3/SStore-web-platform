@@ -218,6 +218,19 @@ body {
   background-image: var(--ai-icon);
 }
 
+.menu li .qarz-icon {
+  filter: brightness(0) invert(1);
+}
+
+.light-theme .menu li .qarz-icon {
+  filter: brightness(0) saturate(100%) invert(41%) sepia(16%) saturate(1162%)
+    hue-rotate(120deg) brightness(0.95);
+}
+
+.menu li.active .qarz-icon {
+  filter: brightness(0) invert(1) !important;
+}
+
 .menu li.active {
   background-color: var(--color-active);
   color: var(--color-text-white);
