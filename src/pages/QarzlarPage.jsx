@@ -60,6 +60,7 @@ const QarzlarPage = () => {
   const [drawerData, setDrawerData] = useState(null);
   const [drawerError, setDrawerError] = useState("");
   const [debtLoading, setDebtLoading] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     // Load user from localStorage (set by DashboardLayout)
@@ -207,6 +208,13 @@ const QarzlarPage = () => {
     }
   };
 
+  // Filter debtors by name (case-insensitive)
+  const filteredDebtors = debtors.filter(
+    (debtor) =>
+      debtor.name &&
+      debtor.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="qarzlar-page">
       <div className="qarzlar-header-row">
@@ -216,7 +224,8 @@ const QarzlarPage = () => {
             type="text"
             className="qarzlar-searchbar"
             placeholder="Qarzdor nomi bo'yicha qidirish..."
-            // Add value and onChange logic if you want to implement search functionality
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <ProfileSection user={user} />
@@ -235,7 +244,7 @@ const QarzlarPage = () => {
             Array.from({ length: 3 }).map((_, i) => (
               <DebtorProfileCardSkeleton key={i} />
             ))
-          ) : debtors.length === 0 ? (
+          ) : filteredDebtors.length === 0 ? (
             <div className="qarzlar-profile-cards-empty">
               <img
                 className="qarzlar-profile-cards-empty-bg"
@@ -244,7 +253,7 @@ const QarzlarPage = () => {
               />
             </div>
           ) : (
-            debtors.map((debtor) => (
+            filteredDebtors.map((debtor) => (
               <DebtorProfileCard
                 key={debtor.id}
                 debtor={debtor}
