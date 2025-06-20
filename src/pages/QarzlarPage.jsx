@@ -1,11 +1,65 @@
 import React, { useState, useEffect } from "react";
 import "../styles/QarzlarPage.css";
 import ProfileSection from "../components/ProfileSection";
+import { ReactComponent as AccountSvg } from "../assets/dashboard/account.svg";
+import DebtorDetailsDrawer from "../components/DebtorDetailsDrawer";
+
+const DebtorProfileCard = ({ debtor, onClick }) => {
+  return (
+    <div
+      className="qarzlar-debtor-row"
+      onClick={onClick}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="qarzlar-debtor-avatar">
+        <AccountSvg width={32} height={32} />
+      </div>
+      <div className="qarzlar-debtor-name">{debtor.name}</div>
+      <div className="qarzlar-debtor-phone">{debtor.phone}</div>
+      <div className="qarzlar-debtor-date">
+        {new Date(debtor.date).toLocaleDateString()}
+      </div>
+      <div className="qarzlar-debtor-amount">
+        {Number(debtor.price).toLocaleString()} UZS
+      </div>
+    </div>
+  );
+};
+
+// Professional skeleton for debtor profile cards (Telegram-style)
+const DebtorProfileCardSkeleton = () => (
+  <div className="qarzlar-debtor-row qarzlar-debtor-card-skeleton">
+    <div className="qarzlar-debtor-avatar skeleton-avatar-shimmer" />
+    <div
+      className="qarzlar-debtor-name skeleton-line-shimmer"
+      style={{ width: "80px", height: 16 }}
+    />
+    <div
+      className="qarzlar-debtor-phone skeleton-line-shimmer"
+      style={{ width: "60px", height: 12 }}
+    />
+    <div
+      className="qarzlar-debtor-date skeleton-line-shimmer"
+      style={{ width: "50px", height: 10 }}
+    />
+    <div
+      className="qarzlar-debtor-amount skeleton-amount-shimmer"
+      style={{ width: "60px", height: 16 }}
+    />
+  </div>
+);
 
 const QarzlarPage = () => {
   const [debts, setDebts] = useState([]);
   const [payInput, setPayInput] = useState({});
   const [user, setUser] = useState({});
+  const [debtors, setDebtors] = useState([]);
+  const [debtorsLoading, setDebtorsLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [drawerData, setDrawerData] = useState(null);
+  const [drawerError, setDrawerError] = useState("");
+  const [debtLoading, setDebtLoading] = useState({});
 
   useEffect(() => {
     // Load user from localStorage (set by DashboardLayout)
@@ -44,6 +98,33 @@ const QarzlarPage = () => {
     fetchDebts();
   }, [apiBaseUrl]);
 
+  useEffect(() => {
+    const fetchDebtors = async () => {
+      setDebtorsLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setDebtorsLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/debtors/`, {
+          method: "GET",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+        setDebtors(data);
+      } catch (err) {
+        setDebtors([]);
+      } finally {
+        setDebtorsLoading(false);
+      }
+    };
+    fetchDebtors();
+  }, [apiBaseUrl]);
+
   const handlePay = (id, amount) => {
     setDebts((prev) =>
       prev.map((d) =>
@@ -56,6 +137,74 @@ const QarzlarPage = () => {
       )
     );
     setPayInput((prev) => ({ ...prev, [id]: "" }));
+  };
+
+  const handleDebtorClick = async (debtorId) => {
+    setDrawerOpen(true);
+    setDrawerLoading(true);
+    setDrawerError("");
+    setDrawerData(null);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setDrawerError("Token not found");
+      setDrawerLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/debtors/${debtorId}/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) throw new Error("Serverdan ma'lumot olinmadi");
+      const data = await res.json();
+      setDrawerData(data);
+    } catch (err) {
+      setDrawerError(err.message);
+    } finally {
+      setDrawerLoading(false);
+    }
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerData(null);
+    setDrawerError("");
+  };
+
+  const handleCompleteDebt = async (debtId) => {
+    setDebtLoading((prev) => ({ ...prev, [debtId]: true }));
+    const token = localStorage.getItem("token");
+    if (!token || !drawerData) return;
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/debtors/delete/${debtId}/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (res.status === 200) {
+        const newDebts = drawerData.debts.filter((d) => d.id !== debtId);
+        if (newDebts.length === 0) {
+          setDebtors((prev) =>
+            prev.filter((d) => d.id !== drawerData.debtor.id)
+          );
+          setDrawerOpen(false);
+          setDrawerData(null);
+        } else {
+          setDrawerData({ ...drawerData, debts: newDebts });
+        }
+      } else {
+        alert("Qarzni o'chirishda xatolik yuz berdi.");
+      }
+    } catch (err) {
+      alert("Qarzni o'chirishda xatolik yuz berdi.");
+    } finally {
+      setDebtLoading((prev) => ({ ...prev, [debtId]: false }));
+    }
   };
 
   return (
@@ -74,13 +223,36 @@ const QarzlarPage = () => {
       </div>
       <h2 className="qarzlar-title">Qarzlar Ro'yxati</h2>
       <div className="qarzlar-profile-cards-container qarzlar-profile-cards-centered">
-        {/* Qarz profile cards will go here in the future */}
-        <img
-          className="qarzlar-profile-cards-empty-bg"
-          src={require("../assets/dashboard/no-account.svg").default}
-          alt=""
-        />
-        <div className="qarzlar-profile-cards-empty-text"></div>
+        <div className="qarzlar-debtor-table">
+          <div className="qarzlar-debtor-row qarzlar-debtor-header">
+            <div className="qarzlar-debtor-avatar" />
+            <div className="qarzlar-debtor-name">Ism</div>
+            <div className="qarzlar-debtor-phone">Telefon</div>
+            <div className="qarzlar-debtor-date">Sana</div>
+            <div className="qarzlar-debtor-amount">Qarz</div>
+          </div>
+          {debtorsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <DebtorProfileCardSkeleton key={i} />
+            ))
+          ) : debtors.length === 0 ? (
+            <div className="qarzlar-profile-cards-empty">
+              <img
+                className="qarzlar-profile-cards-empty-bg"
+                src={require("../assets/dashboard/no-account.svg").default}
+                alt=""
+              />
+            </div>
+          ) : (
+            debtors.map((debtor) => (
+              <DebtorProfileCard
+                key={debtor.id}
+                debtor={debtor}
+                onClick={() => handleDebtorClick(debtor.id)}
+              />
+            ))
+          )}
+        </div>
       </div>
       <div className="qarzlar-list">
         {debts.map((debt) => (
@@ -146,6 +318,15 @@ const QarzlarPage = () => {
           </div>
         ))}
       </div>
+      <DebtorDetailsDrawer
+        open={drawerOpen}
+        loading={drawerLoading}
+        error={drawerError}
+        data={drawerData}
+        onClose={handleCloseDrawer}
+        onCompleteDebt={handleCompleteDebt}
+        debtLoading={debtLoading}
+      />
     </div>
   );
 };

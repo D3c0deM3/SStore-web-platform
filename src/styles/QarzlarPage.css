@@ -1,8 +1,9 @@
 .qarzlar-page {
   height: auto;
   min-height: 100vh;
-  overflow: visible;
-  display: block;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .qarzlar-title {
   flex-shrink: 0;
@@ -200,18 +201,21 @@
   margin-top: 8px;
 }
 .qarzlar-profile-cards-container {
-  background: var(--sellpage-selection-bg);
-  border-radius: 18px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
-  padding: 28px 24px;
-  margin-bottom: 32px;
-  min-height: 60vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
+  align-items: stretch;
+  margin-bottom: 32px;
+  min-height: 60vh; /* reasonable min height for empty/short state */
+  max-height: calc(
+    100vh - 170px
+  ); /* fill viewport minus header/profile/margin */
+  background: var(--sellpage-selection-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--color-shadow, rgba(0, 0, 0, 0.04));
+  padding: 0;
   position: relative;
-  z-index: 1;
+  overflow: hidden;
 }
 .qarzlar-profile-cards-empty-bg {
   position: absolute;
@@ -248,6 +252,275 @@
 /* Prevent main page from scrolling when profile cards overflow */
 .qarzlar-page {
   overflow: hidden;
+}
+.qarzlar-debtor-cards-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  width: 100%;
+  z-index: 1;
+  position: relative;
+}
+.qarzlar-debtor-card {
+  background: var(--color-bg-secondary, #fff);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 22px 28px 18px 22px;
+  min-width: 260px;
+  max-width: 320px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1.5px solid #e0e0e0;
+  transition: box-shadow 0.18s, border 0.18s;
+  position: relative;
+}
+.qarzlar-debtor-card:hover {
+  box-shadow: 0 6px 24px rgba(33, 150, 243, 0.13);
+  border-color: #2196f3;
+}
+.qarzlar-debtor-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
+}
+.qarzlar-debtor-initial {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+}
+.qarzlar-debtor-info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.qarzlar-debtor-name {
+  font-size: 1.13rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+}
+.qarzlar-debtor-phone {
+  font-size: 0.98rem;
+  color: var(--color-text-muted, #888);
+}
+.qarzlar-debtor-date {
+  font-size: 0.93rem;
+  color: var(--color-text-secondary, #aaa);
+}
+.qarzlar-debtor-amount {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #2196f3;
+  /* Remove any background color, just use text color */
+  background: none !important;
+  border-radius: 8px;
+  padding: 7px 14px;
+  margin-left: 10px;
+  min-width: 110px;
+  text-align: right;
+}
+.qarzlar-profile-cards-loading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  z-index: 2;
+}
+.qarzlar-spinner {
+  width: 54px;
+  height: 54px;
+  border: 6px solid #e0e0e0;
+  border-top: 6px solid #2196f3;
+  border-radius: 50%;
+  animation: qarzlar-spin 1s linear infinite;
+  background: transparent;
+}
+@keyframes qarzlar-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Skeleton shimmer effect for debtor profile cards */
+.qarzlar-debtor-card-skeleton {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  padding: 18px 24px;
+  min-width: 260px;
+  min-height: 80px;
+  margin: 0 16px 16px 0;
+  gap: 18px;
+  opacity: 1;
+}
+.skeleton-avatar-shimmer {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s infinite linear;
+}
+.skeleton-line-shimmer {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s infinite linear;
+}
+.skeleton-amount-shimmer {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s infinite linear;
+}
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.qarzlar-debtor-table {
+  width: 100%;
+  min-width: 600px;
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  max-height: 100%;
+}
+.qarzlar-debtor-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  transition: background 0.07s;
+}
+.qarzlar-debtor-row:hover:not(.qarzlar-debtor-header) {
+  background-color: #f3f4f6;
+  /* transition removed here, handled on base row */
+}
+.light-theme .qarzlar-debtor-row:hover:not(.qarzlar-debtor-header) {
+  background-color: #e9ecef;
+}
+:root:not(.light-theme) .qarzlar-debtor-row:hover:not(.qarzlar-debtor-header) {
+  background-color: #23263a;
+}
+.qarzlar-debtor-row:last-child {
+  border-bottom: none;
+}
+.qarzlar-debtor-header {
+  font-weight: 500;
+  background: #fff;
+  background: var(--qarzlar-header-bg, #fff);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--color-border);
+  min-height: 48px;
+  transition: none;
+}
+.qarzlar-debtor-header:hover {
+  background: var(--qarzlar-header-bg, #fff) !important;
+  cursor: default !important;
+}
+
+/* Theme-specific table head background */
+.light-theme .qarzlar-debtor-header {
+  background: #f8f9fb !important;
+  --qarzlar-header-bg: #f8f9fb;
+  color: #6c6c6c;
+}
+:root:not(.light-theme) .qarzlar-debtor-header {
+  background: #393e4c !important;
+  --qarzlar-header-bg: #393e4c;
+  color: #bfc4d1;
+}
+.qarzlar-debtor-row:hover:not(.qarzlar-debtor-header) {
+  background: rgba(0, 0, 0, 0.03);
+}
+.light-theme .qarzlar-debtor-row:hover:not(.qarzlar-debtor-header) {
+  background-color: #e9ecef;
+}
+:root:not(.light-theme) .qarzlar-debtor-row:hover:not(.qarzlar-debtor-header) {
+  background-color: #23263a;
+}
+.qarzlar-debtor-row > .qarzlar-debtor-avatar {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 18px;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.qarzlar-debtor-row > .qarzlar-debtor-name {
+  flex: 1.5;
+  min-width: 120px;
+  color: var(--color-text-primary);
+}
+.qarzlar-debtor-row > .qarzlar-debtor-phone {
+  flex: 1.2;
+  min-width: 100px;
+  color: var(--color-text-secondary);
+}
+.qarzlar-debtor-row > .qarzlar-debtor-date {
+  flex: 1;
+  min-width: 90px;
+  color: var(--color-text-muted);
+}
+.qarzlar-debtor-row > .qarzlar-debtor-amount {
+  flex: 1;
+  min-width: 90px;
+  font-weight: 500;
+  color: var(--color-success);
+}
+.qarzlar-debtor-card-skeleton {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--color-border);
+  min-height: 56px;
+  margin: 0;
+  gap: 0;
+}
+.qarzlar-profile-cards-empty {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
 }
 
 @media (max-width: 900px) {
